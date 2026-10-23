@@ -2,15 +2,15 @@
 migrate((db) => {
   const dao = new Dao(db);
 
-  // 1. Coleção: estados
+  // 1. Coleção: estados (Leitura Pública, Edição Admin)
   const estados = new Collection({
     name: "estados",
     type: "base",
-    listRule: "@request.auth.id != '' || true",
-    viewRule: "@request.auth.id != '' || true",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.id != ''",
+    listRule: "",
+    viewRule: "",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: "sigla", type: "text", required: true, unique: true },
       { name: "nome", type: "text", required: true },
@@ -20,15 +20,15 @@ migrate((db) => {
   });
   dao.saveCollection(estados);
 
-  // 2. Coleção: cidades
+  // 2. Coleção: cidades (Leitura Pública, Edição Admin)
   const cidades = new Collection({
     name: "cidades",
     type: "base",
-    listRule: "@request.auth.id != '' || true",
-    viewRule: "@request.auth.id != '' || true",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.id != ''",
+    listRule: "",
+    viewRule: "",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: "nome", type: "text", required: true },
       { name: "slug", type: "text", required: true, unique: true },
@@ -44,15 +44,15 @@ migrate((db) => {
   });
   dao.saveCollection(cidades);
 
-  // 3. Coleção: atracoes
+  // 3. Coleção: atracoes (Leitura Pública, Edição Admin)
   const atracoes = new Collection({
     name: "atracoes",
     type: "base",
-    listRule: "@request.auth.id != '' || true",
-    viewRule: "@request.auth.id != '' || true",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.id != ''",
+    listRule: "",
+    viewRule: "",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: "nome", type: "text", required: true },
       { name: "slug", type: "text", required: true },
@@ -78,15 +78,15 @@ migrate((db) => {
   });
   dao.saveCollection(atracoes);
 
-  // 4. Coleção: campanhas_ads (House Ads Network)
+  // 4. Coleção: campanhas_ads (Leitura Pública, Edição Admin)
   const campanhasAds = new Collection({
     name: "campanhas_ads",
     type: "base",
-    listRule: "@request.auth.id != '' || true",
-    viewRule: "@request.auth.id != '' || true",
-    createRule: "@request.auth.id != ''",
-    updateRule: "@request.auth.id != ''",
-    deleteRule: "@request.auth.id != ''",
+    listRule: "",
+    viewRule: "",
+    createRule: null,
+    updateRule: null,
+    deleteRule: null,
     schema: [
       { name: "titulo", type: "text", required: true },
       { name: "link_destino", type: "url", required: true },
