@@ -1,0 +1,99 @@
+# Fastlane Fastfile for One Tour Ecosystem (27 States)
+# Single Flutter Multi-Flavor Codebase Automated Release Pipeline
+
+default_platform(:android)
+
+ALL_STATES = %w[
+  pe sp rj ba mg ce pr sc rs al
+  pb rn se ma pi es go df mt ms
+  am pa to ro ac ap rr
+]
+
+REGIONAL_WAVES = {
+  wave1_nordeste: %w[pe ba ce al pb rn se ma pi],
+  wave2_sudeste: %w[sp rj mg es],
+  wave3_sul: %w[pr sc rs],
+  wave4_centro_oeste_norte: %w[df go mt ms am pa to ro ac ap rr]
+}
+
+platform :android do
+  desc "Executar suite completa de testes unitários e de integração Flutter"
+  lane :test do
+    sh("flutter test")
+  end
+
+  desc "Compilar APK de Release para um estado específico (ex: fastlane build_state flavor:pe)"
+  lane :build_state do |options|
+    flavor = (options[:flavor] || "pe").downcase
+    UI.user_error!("Flavor '#{flavor}' desconhecido. Escolha um dos 27 estados: #{ALL_STATES.join(', ')}") unless ALL_STATES.include?(flavor)
+
+    UI.message("🚀 Compilando APK de Release para Tour #{flavor.upcase} (com.onetour.#{flavor})...")
+    sh("flutter build apk --flavor #{flavor} -t lib/main_#{flavor.downcase}.dart --release")
+  end
+
+  desc "Compilar Android App Bundle (AAB) para a Google Play (ex: fastlane bundle_state flavor:pe)"
+  lane :bundle_state do |options|
+    flavor = (options[:flavor] || "pe").downcase
+    UI.user_error!("Flavor '#{flavor}' inválido.") unless ALL_STATES.include?(flavor)
+
+    UI.message("📦 Gerando AAB para Tour #{flavor.upcase}...")
+    sh("flutter build appbundle --flavor #{flavor} -t lib/main_#{flavor.downcase}.dart --release")
+  end
+
+  desc "Publicar na Google Play Store em esteira fechada ou produção"
+  lane :deploy_state do |options|
+    flavor = (options[:flavor] || "pe").downcase
+    track = options[:track] || "internal" # internal, alpha, beta, production
+
+    bundle_state(flavor: flavor)
+
+    aab_path = "../build/app/outputs/bundle/#{flavor}Release/app-#{flavor}-release.aab"
+    UI.message("📤 Enviando AAB (#{aab_path}) para a Google Play (Track: #{track})...")
+
+    upload_to_play_store(
+      package_name: "com.onetour.#{flavor}",
+      track: track,
+      aab: aab_path,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Executar rollout em lote por Onda Regional (ex: fastlane deploy_wave wave:1 track:internal)"
+  lane :deploy_wave do |options|
+    wave_num = options[:wave].to_i
+    track = options[:track] || "internal"
+
+    wave_key = case wave_num
+               when 1 then :wave1_nordeste
+               when 2 then :wave2_sudeste
+               when 3 then :wave3_sul
+               when 4 then :wave4_centro_oeste_norte
+               else
+                 UI.user_error!("Onda #{wave_num} inválida. Use 1 (Nordeste), 2 (Sudeste), 3 (Sul) ou 4 (Centro-Oeste/Norte).")
+               end
+
+    states = REGIONAL_WAVES[wave_key]
+    UI.header("🌊 INICIANDO ROLLOUT REGIONAL - ONDA #{wave_num} (#{states.length} Estados: #{states.join(', ').upcase})")
+
+    states.each_with_index do |uf, idx|
+      UI.message("==================================================")
+      UI.message("Processando [#{idx + 1}/#{states.length}]: Tour #{uf.upcase}")
+      UI.message("==================================================")
+      deploy_state(flavor: uf, track: track)
+    end
+
+    UI.success("🎉 Onda #{wave_num} concluída com sucesso para todos os #{states.length} estados!")
+  end
+
+  desc "Compilar todos os 27 estados em lote para homologação"
+  lane :build_all do
+    UI.header("🏗️ COMPILANDO OS 27 APLICATIVOS DO ECOSSISTEMA ONE TOUR")
+    ALL_STATES.each_with_index do |uf, idx|
+      UI.message("🔨 [#{idx + 1}/27] Compilando APK: Tour #{uf.upcase}...")
+      build_state(flavor: uf)
+    end
+    UI.success("✅ Todos os 27 aplicativos foram compilados com sucesso!")
+  end
+end

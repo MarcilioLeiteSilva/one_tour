@@ -51,6 +51,32 @@ flutter:
   generate: true
   assets:
     - assets/flavors/pe/
+    - assets/flavors/sp/
+    - assets/flavors/rj/
+    - assets/flavors/ba/
+    - assets/flavors/mg/
+    - assets/flavors/ce/
+    - assets/flavors/pr/
+    - assets/flavors/sc/
+    - assets/flavors/rs/
+    - assets/flavors/al/
+    - assets/flavors/pb/
+    - assets/flavors/rn/
+    - assets/flavors/se/
+    - assets/flavors/ma/
+    - assets/flavors/pi/
+    - assets/flavors/es/
+    - assets/flavors/go/
+    - assets/flavors/df/
+    - assets/flavors/mt/
+    - assets/flavors/ms/
+    - assets/flavors/am/
+    - assets/flavors/pa/
+    - assets/flavors/to/
+    - assets/flavors/ro/
+    - assets/flavors/ac/
+    - assets/flavors/ap/
+    - assets/flavors/rr/
     - assets/images/
     - assets/packs/
 

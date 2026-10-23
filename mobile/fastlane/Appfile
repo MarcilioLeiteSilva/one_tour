@@ -1,0 +1,4 @@
+# Fastlane Appfile for One Tour Ecosystem (27 States)
+
+json_key_file(ENV["PLAY_STORE_JSON_KEY"] || "fastlane/play_store_credentials.json")
+package_name("com.onetour.pe")

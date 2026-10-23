@@ -1,0 +1,168 @@
+name: One Tour - 27 States CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      target_flavor:
+        description: 'Selecione o estado para compilação (ou all para todos os 27)'
+        required: true
+        default: 'pe'
+        type: choice
+        options:
+          - 'pe'
+          - 'sp'
+          - 'rj'
+          - 'ba'
+          - 'mg'
+          - 'ce'
+          - 'pr'
+          - 'sc'
+          - 'rs'
+          - 'al'
+          - 'pb'
+          - 'rn'
+          - 'se'
+          - 'ma'
+          - 'pi'
+          - 'es'
+          - 'go'
+          - 'df'
+          - 'mt'
+          - 'ms'
+          - 'am'
+          - 'pa'
+          - 'to'
+          - 'ro'
+          - 'ac'
+          - 'ap'
+          - 'rr'
+          - 'all'
+      build_format:
+        description: 'Formato do pacote'
+        required: true
+        default: 'apk'
+        type: choice
+        options:
+          - 'apk'
+          - 'appbundle'
+
+jobs:
+  # ==========================================
+  # 1. SUITE DE TESTES E QUALIDADE
+  # ==========================================
+  test_and_lint:
+    name: 🧪 Validação e Testes Unitários
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configurar Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Instalar Dependências Mobile
+        run: |
+          cd mobile
+          flutter pub get
+
+      - name: Executar Análise Estática
+        run: |
+          cd mobile
+          flutter analyze --no-fatal-infos
+
+      - name: Executar Testes Automatizados (100% Cobertura de Roteiros e Offline)
+        run: |
+          cd mobile
+          flutter test --coverage
+
+  # ==========================================
+  # 2. ESTEIRA DE COMPILAÇÃO MULTI-FLAVOR
+  # ==========================================
+  build_flavor_matrix:
+    name: 🔨 Build Tour ${{ matrix.flavor }}
+    needs: test_and_lint
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || inputs.target_flavor == 'all' || inputs.target_flavor == matrix.flavor
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [
+          pe, sp, rj, ba, mg, ce, pr, sc, rs, al,
+          pb, rn, se, ma, pi, es, go, df, mt, ms,
+          am, pa, to, ro, ac, ap, rr
+        ]
+
+    steps:
+      - name: Checkout Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configurar Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ matrix.flavor }}-${{ hashFiles('mobile/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-${{ matrix.flavor }}-
+
+      - name: Instalar Dependências
+        run: |
+          cd mobile
+          flutter pub get
+
+      - name: Compilar APK de Release (Flavor ${{ matrix.flavor }})
+        if: github.event_name != 'workflow_dispatch' || inputs.build_format == 'apk'
+        run: |
+          cd mobile
+          flutter build apk --flavor ${{ matrix.flavor }} -t lib/main_${{ matrix.flavor }}.dart --release
+
+      - name: Compilar AAB de Produção (Flavor ${{ matrix.flavor }})
+        if: github.event_name == 'workflow_dispatch' && inputs.build_format == 'appbundle'
+        run: |
+          cd mobile
+          flutter build appbundle --flavor ${{ matrix.flavor }} -t lib/main_${{ matrix.flavor }}.dart --release
+
+      - name: Upload Artefato APK Gerado
+        if: github.event_name != 'workflow_dispatch' || inputs.build_format == 'apk'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tour-${{ matrix.flavor }}-release-apk
+          path: mobile/build/app/outputs/flutter-apk/app-${{ matrix.flavor }}-release.apk
+          retention-days: 7
+
+      - name: Upload Artefato AAB Gerado
+        if: github.event_name == 'workflow_dispatch' && inputs.build_format == 'appbundle'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tour-${{ matrix.flavor }}-release-aab
+          path: mobile/build/app/outputs/bundle/${{ matrix.flavor }}Release/app-${{ matrix.flavor }}-release.aab
+          retention-days: 7

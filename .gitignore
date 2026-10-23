@@ -7,6 +7,8 @@
 *.env
 !.env.example
 server/.env
+keys_firebase/
+*adminsdk*.json
 
 # Bancos de Dados e Volumes Locais do Docker
 server/postgres/pgdata/

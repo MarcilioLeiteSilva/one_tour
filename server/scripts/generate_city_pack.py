@@ -3,6 +3,8 @@
 One Tour - City Pack SQLite Generator (ETL)
 Generates standalone, offline-first city packs (pack.sqlite) containing POIs
 and precomputed distance/time travel matrices for the local VRP trip planner.
+
+Phase 6: Multi-city support for Pernambuco (Recife, Porto de Galinhas, Praia dos Carneiros, Fernando de Noronha).
 """
 
 import sys
@@ -10,7 +12,7 @@ import os
 import math
 import sqlite3
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Haversine distance calculator
 def haversine_meters(lat1, lon1, lat2, lon2):
@@ -33,7 +35,7 @@ def estimate_travel_times(meters):
     drive_sec = int(meters / 6.94) + 300
     return walk_sec, drive_sec
 
-# Curated POIs for Recife & Olinda (Capital Multicultural de Pernambuco)
+# 1. RECIFE & OLINDA (Capital Multicultural)
 RECIFE_PLACES = [
     {
         "id": "marco_zero",
@@ -367,7 +369,646 @@ RECIFE_PLACES = [
     }
 ]
 
+# 2. PORTO DE GALINHAS (Piscinas Naturais & Sol)
+PORTO_DE_GALINHAS_PLACES = [
+    {
+        "id": "piscinas_porto",
+        "city_slug": "porto_de_galinhas",
+        "name": "Piscinas Naturais de Porto de Galinhas",
+        "category": "praias",
+        "lat": -8.5042,
+        "lon": -35.0028,
+        "duration_min": 120,
+        "cost_level": 2,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 99.0,
+        "rating_avg": 4.9,
+        "rating_count": 5400,
+        "likes_count": 11200,
+        "rank_posicao": 1,
+        "description": "Passeio clássico de jangada até a barreira de corais com águas cristalinas repletas de peixes sargentinhos.",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "07:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "muro_alto",
+        "city_slug": "porto_de_galinhas",
+        "name": "Praia de Muro Alto & Paredão de Recifes",
+        "category": "praias",
+        "lat": -8.4712,
+        "lon": -34.9875,
+        "duration_min": 150,
+        "cost_level": 2,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 97.5,
+        "rating_avg": 4.9,
+        "rating_count": 4200,
+        "likes_count": 9800,
+        "rank_posicao": 2,
+        "description": "Verdadeira piscina oceânica de águas mornas e calmas, ideal para famílias com crianças e passeios de caiaque.",
+        "image_url": "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "06:00",
+        "closing_time": "18:00"
+    },
+    {
+        "id": "pontal_maracaipe",
+        "city_slug": "porto_de_galinhas",
+        "name": "Pontal de Maracaípe & Passeio dos Cavalos-Marinhos",
+        "category": "natureza",
+        "lat": -8.5350,
+        "lon": -35.0180,
+        "duration_min": 90,
+        "cost_level": 2,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 96.0,
+        "rating_avg": 4.8,
+        "rating_count": 3600,
+        "likes_count": 7800,
+        "rank_posicao": 3,
+        "description": "Encontro do rio com o mar com jangadeiros levando para avistar cavalos-marinhos no manguezal e lindo pôr do sol.",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "17:30"
+    },
+    {
+        "id": "praia_cupe",
+        "city_slug": "porto_de_galinhas",
+        "name": "Praia do Cupe & Pontal do Cupe",
+        "category": "praias",
+        "lat": -8.4890,
+        "lon": -34.9960,
+        "duration_min": 90,
+        "cost_level": 1,
+        "kid_friendly": 0,
+        "must_see": 0,
+        "is_lunch": 0,
+        "score": 92.0,
+        "rating_avg": 4.7,
+        "rating_count": 2400,
+        "likes_count": 5100,
+        "rank_posicao": 4,
+        "description": "Extensa praia com trecho de ondas para surf e pontal com piscinas calmas protegidas por arrecifes.",
+        "image_url": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "06:00",
+        "closing_time": "18:00"
+    },
+    {
+        "id": "vila_porto",
+        "city_slug": "porto_de_galinhas",
+        "name": "Vila de Porto & Galinhas Artesanais",
+        "category": "compras",
+        "lat": -8.5060,
+        "lon": -35.0050,
+        "duration_min": 75,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 94.0,
+        "rating_avg": 4.8,
+        "rating_count": 4100,
+        "likes_count": 8200,
+        "rank_posicao": 5,
+        "description": "Centro charmoso com calçadões de pedestres, artesanato típico com esculturas de galinhas coloridas e sorveterias.",
+        "image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "23:00"
+    },
+    {
+        "id": "barcaxeira",
+        "city_slug": "porto_de_galinhas",
+        "name": "Restaurante Barcaxeira",
+        "category": "gastronomia",
+        "lat": -8.5055,
+        "lon": -35.0042,
+        "duration_min": 75,
+        "cost_level": 3,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 96.5,
+        "rating_avg": 4.9,
+        "rating_count": 3800,
+        "likes_count": 7900,
+        "rank_posicao": 6,
+        "description": "Parada gastronômica obrigatória famosa pelos pratos de macaxeira gratinada com camarão e carne de sol.",
+        "image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "12:00",
+        "closing_time": "23:00"
+    },
+    {
+        "id": "restaurante_domingos",
+        "city_slug": "porto_de_galinhas",
+        "name": "Restaurante Domingos",
+        "category": "gastronomia",
+        "lat": -8.5062,
+        "lon": -35.0048,
+        "duration_min": 80,
+        "cost_level": 4,
+        "kid_friendly": 0,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 95.0,
+        "rating_avg": 4.8,
+        "rating_count": 2200,
+        "likes_count": 4500,
+        "rank_posicao": 7,
+        "description": "Ambiente sofisticado com música ao vivo e pratos refinados de lagosta grelhada e peixes nobres.",
+        "image_url": "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "12:00",
+        "closing_time": "23:30"
+    },
+    {
+        "id": "projeto_hippocampus",
+        "city_slug": "porto_de_galinhas",
+        "name": "Projeto Hippocampus (Conservação)",
+        "category": "natureza",
+        "lat": -8.5015,
+        "lon": -35.0068,
+        "duration_min": 45,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 0,
+        "is_lunch": 0,
+        "score": 91.5,
+        "rating_avg": 4.7,
+        "rating_count": 1800,
+        "likes_count": 3400,
+        "rank_posicao": 8,
+        "description": "Centro educativo e de preservação ambiental com aquários dedicados à pesquisa e conservação dos cavalos-marinhos.",
+        "image_url": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "16:30"
+    },
+    {
+        "id": "buggy_ponta_a_ponta",
+        "city_slug": "porto_de_galinhas",
+        "name": "Passeio de Buggy Ponta a Ponta",
+        "category": "aventura",
+        "lat": -8.5050,
+        "lon": -35.0035,
+        "duration_min": 180,
+        "cost_level": 3,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 98.0,
+        "rating_avg": 4.9,
+        "rating_count": 4900,
+        "likes_count": 10400,
+        "rank_posicao": 9,
+        "description": "Aventura clássica que percorre de Muro Alto ao Pontal de Maracaípe pelas areias e coqueirais.",
+        "image_url": "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "16:00"
+    },
+    {
+        "id": "praia_serrambi",
+        "city_slug": "porto_de_galinhas",
+        "name": "Praia de Serrambi & Enseada Tranquila",
+        "category": "praias",
+        "lat": -8.5610,
+        "lon": -35.0320,
+        "duration_min": 120,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 0,
+        "is_lunch": 0,
+        "score": 91.0,
+        "rating_avg": 4.6,
+        "rating_count": 1950,
+        "likes_count": 3800,
+        "rank_posicao": 10,
+        "description": "Refúgio costeiro de águas mornas, excelente para caminhadas e esportes náuticos.",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "06:00",
+        "closing_time": "18:00"
+    }
+]
+
+# 3. PRAIA DOS CARNEIROS (Paraíso dos Coqueirais)
+CARNEIROS_PLACES = [
+    {
+        "id": "capela_sao_benedito",
+        "city_slug": "carneiros",
+        "name": "Capela de São Benedito (Igrejinha de Carneiros)",
+        "category": "cultura",
+        "lat": -8.7042,
+        "lon": -35.0883,
+        "duration_min": 60,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 99.0,
+        "rating_avg": 4.9,
+        "rating_count": 4800,
+        "likes_count": 12300,
+        "rank_posicao": 1,
+        "description": "A capela mais fotografada do Brasil, construída no século XVIII entre coqueiros centenários à beira da maré.",
+        "image_url": "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "06:00",
+        "closing_time": "18:00"
+    },
+    {
+        "id": "piscinas_carneiros",
+        "city_slug": "carneiros",
+        "name": "Piscinas Naturais de Carneiros",
+        "category": "praias",
+        "lat": -8.7070,
+        "lon": -35.0850,
+        "duration_min": 120,
+        "cost_level": 2,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 98.0,
+        "rating_avg": 4.9,
+        "rating_count": 4100,
+        "likes_count": 9600,
+        "rank_posicao": 2,
+        "description": "Mar esmeralda translúcido com barreiras de corais acessíveis a pé durante a maré baixa.",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "07:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "banho_argila_guadalupe",
+        "city_slug": "carneiros",
+        "name": "Banho de Argila na Praia de Guadalupe",
+        "category": "natureza",
+        "lat": -8.6850,
+        "lon": -35.0740,
+        "duration_min": 60,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 93.0,
+        "rating_avg": 4.7,
+        "rating_count": 2900,
+        "likes_count": 5800,
+        "rank_posicao": 3,
+        "description": "Parada tradicional dos passeios de barco para esfoliação com argila medicinal rica em minerais.",
+        "image_url": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "16:30"
+    },
+    {
+        "id": "catamara_bancos_areia",
+        "city_slug": "carneiros",
+        "name": "Passeio de Catamarã pelos Bancos de Areia",
+        "category": "aventura",
+        "lat": -8.7010,
+        "lon": -35.0860,
+        "duration_min": 120,
+        "cost_level": 3,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 96.5,
+        "rating_avg": 4.8,
+        "rating_count": 3500,
+        "likes_count": 7900,
+        "rank_posicao": 4,
+        "description": "Navegação cênica pelo estuário do Rio Formoso e bancos de areia que emergem no meio do mar límpido.",
+        "image_url": "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "16:00"
+    },
+    {
+        "id": "bora_bora_carneiros",
+        "city_slug": "carneiros",
+        "name": "Bora Bora Carneiros (Beach Club & Restaurante)",
+        "category": "gastronomia",
+        "lat": -8.7030,
+        "lon": -35.0875,
+        "duration_min": 90,
+        "cost_level": 3,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 97.0,
+        "rating_avg": 4.8,
+        "rating_count": 5200,
+        "likes_count": 10500,
+        "rank_posicao": 5,
+        "description": "Estrutura completa pé na areia com gazebos, petiscos de frutos do mar, drinks tropicais e acesso privilegiado à praia.",
+        "image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "beijupira_carneiros",
+        "city_slug": "carneiros",
+        "name": "Restaurante Beijupirá Carneiros",
+        "category": "gastronomia",
+        "lat": -8.6990,
+        "lon": -35.0845,
+        "duration_min": 80,
+        "cost_level": 4,
+        "kid_friendly": 0,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 95.5,
+        "rating_avg": 4.8,
+        "rating_count": 2600,
+        "likes_count": 5400,
+        "rank_posicao": 6,
+        "description": "Gastronomia pernambucana de praia sofisticada misturando peixes frescos grelhados com frutas tropicais.",
+        "image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "11:30",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "rio_formoso_manguezal",
+        "city_slug": "carneiros",
+        "name": "Estuário do Rio Formoso & Manguezais",
+        "category": "natureza",
+        "lat": -8.6920,
+        "lon": -35.0930,
+        "duration_min": 75,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 0,
+        "is_lunch": 0,
+        "score": 90.5,
+        "rating_avg": 4.6,
+        "rating_count": 1700,
+        "likes_count": 3200,
+        "rank_posicao": 7,
+        "description": "Rico ecossistema costeiro com passeios de stand up paddle e observação da biodiversidade marinha.",
+        "image_url": "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "praia_do_amor",
+        "city_slug": "carneiros",
+        "name": "Praia do Amor & Coqueiro Solitário",
+        "category": "praias",
+        "lat": -8.7180,
+        "lon": -35.0990,
+        "duration_min": 90,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 0,
+        "is_lunch": 0,
+        "score": 89.0,
+        "rating_avg": 4.6,
+        "rating_count": 1400,
+        "likes_count": 2900,
+        "rank_posicao": 8,
+        "description": "Faixa tranquila e quase deserta de areia branca perfeita para descanso e fotos deslumbrantes.",
+        "image_url": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "06:00",
+        "closing_time": "18:00"
+    }
+]
+
+# 4. FERNANDO DE NORONHA (Santuário Ecológico)
+NORONHA_PLACES = [
+    {
+        "id": "baia_do_sancho",
+        "city_slug": "noronha",
+        "name": "Baía do Sancho (Melhor Praia do Mundo)",
+        "category": "praias",
+        "lat": -3.8542,
+        "lon": -32.4435,
+        "duration_min": 180,
+        "cost_level": 2,
+        "kid_friendly": 0,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 99.8,
+        "rating_avg": 5.0,
+        "rating_count": 6200,
+        "likes_count": 18500,
+        "rank_posicao": 1,
+        "description": "Eleita repetidamente a melhor praia do planeta pelo TripAdvisor; acesso por fenda na rocha e água cristalina.",
+        "image_url": "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "18:00"
+    },
+    {
+        "id": "baia_dos_porcos",
+        "city_slug": "noronha",
+        "name": "Baía dos Porcos & Morro Dois Irmãos",
+        "category": "praias",
+        "lat": -3.8510,
+        "lon": -32.4410,
+        "duration_min": 120,
+        "cost_level": 1,
+        "kid_friendly": 0,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 99.0,
+        "rating_avg": 4.9,
+        "rating_count": 5100,
+        "likes_count": 14200,
+        "rank_posicao": 2,
+        "description": "Cartão-postal mais famoso do arquipélago, com piscinas naturais de cor verde-esmeralda emolduradas pelos Dois Irmãos.",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "18:00"
+    },
+    {
+        "id": "cacimba_do_padre",
+        "city_slug": "noronha",
+        "name": "Praia da Cacimba do Padre",
+        "category": "praias",
+        "lat": -3.8530,
+        "lon": -32.4460,
+        "duration_min": 90,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 96.5,
+        "rating_avg": 4.8,
+        "rating_count": 3900,
+        "likes_count": 8900,
+        "rank_posicao": 3,
+        "description": "Meca do surf brasileiro com tubos perfeitos e ampla faixa de areia voltada para o Morro Dois Irmãos.",
+        "image_url": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "06:00",
+        "closing_time": "18:30"
+    },
+    {
+        "id": "mirante_golfinhos",
+        "city_slug": "noronha",
+        "name": "Mirante dos Golfinhos Rotadores",
+        "category": "natureza",
+        "lat": -3.8550,
+        "lon": -32.4380,
+        "duration_min": 90,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 97.0,
+        "rating_avg": 4.9,
+        "rating_count": 3400,
+        "likes_count": 7600,
+        "rank_posicao": 4,
+        "description": "Ponto de observação no alto do paredão rochoso onde centenas de golfinhos rotadores se reúnem ao amanhecer.",
+        "image_url": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "06:30",
+        "closing_time": "16:00"
+    },
+    {
+        "id": "projeto_tamar_noronha",
+        "city_slug": "noronha",
+        "name": "Centro de Visitantes Projeto Tamar",
+        "category": "natureza",
+        "lat": -3.8480,
+        "lon": -32.4280,
+        "duration_min": 60,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 95.0,
+        "rating_avg": 4.8,
+        "rating_count": 2800,
+        "likes_count": 6200,
+        "rank_posicao": 5,
+        "description": "Palestras diárias noturnas gratuitas sobre a vida marinha e proteção das tartarugas marinhas.",
+        "image_url": "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "22:00"
+    },
+    {
+        "id": "mergulho_naufragio_porto",
+        "city_slug": "noronha",
+        "name": "Mergulho no Naufrágio do Porto de Santo Antônio",
+        "category": "aventura",
+        "lat": -3.8420,
+        "lon": -32.4170,
+        "duration_min": 150,
+        "cost_level": 4,
+        "kid_friendly": 0,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 98.0,
+        "rating_avg": 4.9,
+        "rating_count": 3200,
+        "likes_count": 8100,
+        "rank_posicao": 6,
+        "description": "Mergulho com cilindro ou snorkel entre cardumes, arraias e tartarugas no navio grego naufragado na costa.",
+        "image_url": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "16:00"
+    },
+    {
+        "id": "forte_do_boldro_sunset",
+        "city_slug": "noronha",
+        "name": "Mirante do Forte São Pedro do Boldró",
+        "category": "cultura",
+        "lat": -3.8475,
+        "lon": -32.4350,
+        "duration_min": 75,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 96.0,
+        "rating_avg": 4.9,
+        "rating_count": 4500,
+        "likes_count": 9700,
+        "rank_posicao": 7,
+        "description": "O entardecer mais aplaudido da ilha, com vista panorâmica do Morro Dois Irmãos e ruínas históricas.",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "16:00",
+        "closing_time": "19:00"
+    },
+    {
+        "id": "trilha_atalaia",
+        "city_slug": "noronha",
+        "name": "Trilha do Atalaia & Aquário Natural",
+        "category": "aventura",
+        "lat": -3.8450,
+        "lon": -32.4080,
+        "duration_min": 120,
+        "cost_level": 2,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 95.5,
+        "rating_avg": 4.8,
+        "rating_count": 2900,
+        "likes_count": 6700,
+        "rank_posicao": 8,
+        "description": "Flutuação controlada de 30 minutos em berçário marinho raso de corais repleto de tubarões-lixa filhotes.",
+        "image_url": "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "15:00"
+    },
+    {
+        "id": "restaurante_varanda",
+        "city_slug": "noronha",
+        "name": "Restaurante Varanda (Chef Auricélio Romão)",
+        "category": "gastronomia",
+        "lat": -3.8495,
+        "lon": -32.4260,
+        "duration_min": 80,
+        "cost_level": 4,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 96.5,
+        "rating_avg": 4.9,
+        "rating_count": 3100,
+        "likes_count": 6900,
+        "rank_posicao": 9,
+        "description": "Culinária sofisticada noronhense, consagrada pelo 'Peixe na Telha' e moquecas com leite de coco fresco.",
+        "image_url": "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "12:00",
+        "closing_time": "23:00"
+    },
+    {
+        "id": "cacimba_bistro",
+        "city_slug": "noronha",
+        "name": "Cacimba Bistrô",
+        "category": "gastronomia",
+        "lat": -3.8440,
+        "lon": -32.4220,
+        "duration_min": 80,
+        "cost_level": 4,
+        "kid_friendly": 0,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 95.0,
+        "rating_avg": 4.8,
+        "rating_count": 2600,
+        "likes_count": 5800,
+        "rank_posicao": 10,
+        "description": "Bistrô charmoso no centro histórico da Vila dos Remédios, famoso pelos pastéis de lagosta e ambiente rústico-chique.",
+        "image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "12:00",
+        "closing_time": "23:30"
+    }
+]
+
+CITY_MAP = {
+    "recife": RECIFE_PLACES,
+    "porto_de_galinhas": PORTO_DE_GALINHAS_PLACES,
+    "carneiros": CARNEIROS_PLACES,
+    "noronha": NORONHA_PLACES,
+}
+
 def build_pack(output_path, city_slug="recife"):
+    places = CITY_MAP.get(city_slug.lower())
+    if not places:
+        raise ValueError(f"Unknown city_slug: {city_slug}. Available: {list(CITY_MAP.keys())}")
+
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     if os.path.exists(output_path):
         os.remove(output_path)
@@ -385,8 +1026,8 @@ def build_pack(output_path, city_slug="recife"):
 
     cur.execute("INSERT INTO metadata VALUES ('city_slug', ?)", (city_slug,))
     cur.execute("INSERT INTO metadata VALUES ('version', '1.0.0')")
-    cur.execute("INSERT INTO metadata VALUES ('created_at', ?)", (datetime.utcnow().isoformat(),))
-    cur.execute("INSERT INTO metadata VALUES ('total_places', ?)", (str(len(RECIFE_PLACES)),))
+    cur.execute("INSERT INTO metadata VALUES ('created_at', ?)", (datetime.now(timezone.utc).isoformat(),))
+    cur.execute("INSERT INTO metadata VALUES ('total_places', ?)", (str(len(places)),))
 
     # 2. Place Table
     cur.execute("""
@@ -420,7 +1061,7 @@ def build_pack(output_path, city_slug="recife"):
     cur.execute("CREATE INDEX idx_place_rank ON place (rank_posicao);")
 
     # Insert Places
-    for p in RECIFE_PLACES:
+    for p in places:
         cur.execute("""
             INSERT INTO place (
                 id, city_slug, name, category, lat, lon, duration_min, cost_level,
@@ -446,8 +1087,8 @@ def build_pack(output_path, city_slug="recife"):
     """)
 
     pair_count = 0
-    for p1 in RECIFE_PLACES:
-        for p2 in RECIFE_PLACES:
+    for p1 in places:
+        for p2 in places:
             if p1["id"] == p2["id"]:
                 dist = 0
                 walk_sec = 0
@@ -467,15 +1108,24 @@ def build_pack(output_path, city_slug="recife"):
 
     file_size_kb = os.path.getsize(output_path) / 1024.0
     print(f"SUCCESS: Generated city pack for '{city_slug}' at {output_path}")
-    print(f"Stats: {len(RECIFE_PLACES)} places, {pair_count} matrix pairs, {file_size_kb:.2f} KB")
+    print(f"Stats: {len(places)} places, {pair_count} matrix pairs, {file_size_kb:.2f} KB")
 
 def main():
     parser = argparse.ArgumentParser(description="Generate One Tour offline city pack SQLite")
     parser.add_argument("--city", default="recife", help="City slug (default: recife)")
-    parser.add_argument("--output", default="f:/One_tour/mobile/assets/packs/pack_recife.sqlite", help="Output path")
+    parser.add_argument("--output", default=None, help="Output path (optional)")
+    parser.add_argument("--all", action="store_true", help="Generate all Pernambuco polo packs")
     args = parser.parse_args()
 
-    build_pack(args.output, args.city)
+    default_base_dir = "f:/One_tour/mobile/assets/packs"
+
+    if args.all:
+        for slug in CITY_MAP.keys():
+            out_file = os.path.join(default_base_dir, f"pack_{slug}.sqlite")
+            build_pack(out_file, slug)
+    else:
+        out_file = args.output or os.path.join(default_base_dir, f"pack_{args.city}.sqlite")
+        build_pack(out_file, args.city)
 
 if __name__ == "__main__":
     main()

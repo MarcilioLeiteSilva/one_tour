@@ -4,7 +4,7 @@ import 'app.dart';
 import 'core/config/app_config.dart';
 import 'core/config/app_flavor.dart';
 
-/// Entrypoint específico para compilar e rodar o flavor Tour Pernambuco
+/// Entrypoint específico para compilar e rodar o flavor Tour Pernambuco (PE)
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 

@@ -452,6 +452,37 @@ class TripOptimizerService {
       lastPlace = currentPlace;
     }
 
+    // Guarantee lunch injection if not triggered in-between stops
+    if (!lunchInjected && lunchCandidates.isNotEmpty && stops.isNotEmpty) {
+      final lunchStop = _findBestLunchStop(
+        nearPlace: stops.last.place,
+        lunchCandidates: lunchCandidates,
+        usedLunchIds: usedLunchIds,
+        currentMinutes: math.max(currentMinutes, 12 * 60 + 30),
+        order: stops.length + 1,
+      );
+
+      if (lunchStop != null) {
+        final segToLunch = estimateSegment(stops.last.place, lunchStop.place);
+        stops[stops.length - 1] = stops.last.copyWith(transitToNext: segToLunch);
+        totalTransitMin += segToLunch.durationMinutes;
+        totalMeters += segToLunch.distanceMeters;
+
+        final startMinutes = math.max(currentMinutes + segToLunch.durationMinutes, 12 * 60 + 30);
+        final lunchStartStr = _formatMinutes(startMinutes);
+        final lunchEndStr = _formatMinutes(startMinutes + lunchStop.place.durationMin);
+        totalVisitMin += lunchStop.place.durationMin;
+
+        stops.add(ItineraryStop(
+          order: stops.length + 1,
+          place: lunchStop.place,
+          startTime: lunchStartStr,
+          endTime: lunchEndStr,
+          isLunch: true,
+        ));
+      }
+    }
+
     return ItineraryDay(
       dayNumber: dayNumber,
       stops: stops,
