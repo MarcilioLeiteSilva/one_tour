@@ -5,6 +5,8 @@ import '../../../core/config/app_config.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/mock_pe_data.dart';
 import '../../trip_planner/presentation/trip_wizard_modal.dart';
+import '../../house_ads/presentation/house_ad_top_card.dart';
+import '../../house_ads/services/house_ads_service.dart';
 
 class CityDetailScreen extends ConsumerStatefulWidget {
   final String cityId;
@@ -198,6 +200,31 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
                       Text(city.description, style: theme.textTheme.bodyMedium),
 
                       const SizedBox(height: 24),
+
+                      // Destaque Patrocinado / House Ads Local
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final adsAsync = ref.watch(
+                            houseAdsByPositionProvider(
+                              HouseAdQuery(
+                                uf: config.flavor.name.toUpperCase(),
+                                city: city.id,
+                                position: 'home_card',
+                              ),
+                            ),
+                          );
+                          return adsAsync.when(
+                            data: (ads) => ads.isNotEmpty
+                                ? Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: HouseAdTopCard(ad: ads.first),
+                                  )
+                                : const SizedBox.shrink(),
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          );
+                        },
+                      ),
 
                       // Lista de Atrações na Cidade
                       Row(

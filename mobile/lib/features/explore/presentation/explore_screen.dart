@@ -5,6 +5,8 @@ import '../../../core/config/app_config.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/mock_pe_data.dart';
+import '../../house_ads/presentation/house_ad_banner.dart';
+import '../../house_ads/services/house_ads_service.dart';
 
 class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
@@ -218,8 +220,26 @@ class ExploreScreen extends ConsumerWidget {
 
                   const SizedBox(height: 24),
 
-                  // Bloco Nativo House Ads (Monetização da Rede)
-                  _HouseAdsBanner(config: config, sponsoredText: l10n.houseAdsSponsored),
+                  // Bloco Nativo House Ads (Monetização e Cross-Promotion da Rede)
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final adsAsync = ref.watch(
+                        houseAdsByPositionProvider(
+                          HouseAdQuery(
+                            uf: config.flavor.name.toUpperCase(),
+                            position: 'attraction_banner',
+                          ),
+                        ),
+                      );
+                      return adsAsync.when(
+                        data: (ads) => ads.isNotEmpty
+                            ? HouseAdBanner(ad: ads.first)
+                            : const SizedBox.shrink(),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      );
+                    },
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -415,74 +435,6 @@ class _CityCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _HouseAdsBanner extends StatelessWidget {
-  final FlavorConfig config;
-  final String sponsoredText;
-
-  const _HouseAdsBanner({required this.config, required this.sponsoredText});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          colors: [config.primaryColor, config.primaryColor.withOpacity(0.85)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.sailing_rounded, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.amber,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    sponsoredText.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 9,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Passeio de Catamarã pelos Rios do Recife',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Reserve com desconto exclusivo no app',
-                  style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right, color: Colors.white),
-        ],
       ),
     );
   }

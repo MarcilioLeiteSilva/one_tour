@@ -7,6 +7,8 @@ import '../../../l10n/app_localizations.dart';
 import '../domain/itinerary_models.dart';
 import '../domain/trip_request.dart';
 import 'trip_planner_controller.dart';
+import '../../house_ads/presentation/house_ad_interstitial_modal.dart';
+import '../../house_ads/services/house_ads_service.dart';
 
 class TripItineraryScreen extends ConsumerStatefulWidget {
   final String tripId;
@@ -110,12 +112,20 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
             actions: [
               IconButton(
                 icon: const Icon(Icons.share_outlined),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Card do roteiro gerado! Pronto para compartilhar nas redes sociais.'),
-                    ),
-                  );
+                onPressed: () async {
+                  final ads = await ref.read(houseAdsServiceProvider).getAds(
+                        uf: config.flavor.name.toUpperCase(),
+                        position: 'interstitial',
+                      );
+                  if (context.mounted && ads.isNotEmpty) {
+                    HouseAdInterstitialModal.show(context, ads.first);
+                  } else if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Card do roteiro gerado! Pronto para compartilhar.'),
+                      ),
+                    );
+                  }
                 },
               ),
               IconButton(
