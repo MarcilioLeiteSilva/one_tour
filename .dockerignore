@@ -1,0 +1,6 @@
+mobile/
+relatorios/
+.git/
+server/postgres/pgdata/
+server/pocketbase/pb_data/
+server/minio/data/

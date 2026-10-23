@@ -15,8 +15,8 @@ RUN wget https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSIO
 
 WORKDIR /pb
 
-# Copia migrações de dados pré-configuradas do PocketBase
-COPY pocketbase/pb_migrations /pb/pb_migrations
+# Copia migrações de dados pré-configuradas do PocketBase a partir da raiz do repositório
+COPY server/pocketbase/pb_migrations /pb/pb_migrations
 
 EXPOSE 8090
 
