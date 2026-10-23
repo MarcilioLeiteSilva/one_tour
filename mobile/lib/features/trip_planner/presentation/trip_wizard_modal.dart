@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/config/app_config.dart';
 import '../../../l10n/app_localizations.dart';
+import '../domain/trip_request.dart';
+import 'trip_planner_controller.dart';
 
 class TripWizardModal extends ConsumerStatefulWidget {
   final String cityName;
@@ -280,9 +282,31 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
                   l10n.btnGenerateTrip,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                onPressed: () {
+                onPressed: () async {
+                  final pace = _selectedPace == 0
+                      ? TripPace.relaxed
+                      : (_selectedPace == 1 ? TripPace.moderate : TripPace.intense);
+                  final companion = _selectedCompanion == 0
+                      ? TripCompanion.solo
+                      : (_selectedCompanion == 1
+                          ? TripCompanion.couple
+                          : (_selectedCompanion == 2
+                              ? TripCompanion.family
+                              : TripCompanion.friends));
+
+                  final request = TripRequest(
+                    cityName: widget.cityName,
+                    days: _selectedDays,
+                    pace: pace,
+                    companion: companion,
+                    interests: Set.from(_selectedInterests),
+                  );
+
                   Navigator.pop(context);
-                  context.push('/roteiro/roteiro_demo');
+                  final plan = await ref.read(currentTripPlanProvider.notifier).generateTrip(request);
+                  if (context.mounted && plan != null) {
+                    context.push('/roteiro/${plan.id}');
+                  }
                 },
               ),
             ),

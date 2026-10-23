@@ -1,0 +1,481 @@
+#!/usr/bin/env python3
+"""
+One Tour - City Pack SQLite Generator (ETL)
+Generates standalone, offline-first city packs (pack.sqlite) containing POIs
+and precomputed distance/time travel matrices for the local VRP trip planner.
+"""
+
+import sys
+import os
+import math
+import sqlite3
+import argparse
+from datetime import datetime
+
+# Haversine distance calculator
+def haversine_meters(lat1, lon1, lat2, lon2):
+    R = 6371000  # Earth radius in meters
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = (math.sin(delta_phi / 2.0) ** 2 +
+         math.cos(phi1) * math.cos(phi2) * (math.sin(delta_lambda / 2.0) ** 2))
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return int(R * c)
+
+# Realistic travel time estimations
+def estimate_travel_times(meters):
+    # Walk: 4.5 km/h = 1.25 m/s + 120s buffer
+    walk_sec = int(meters / 1.25) + 120 if meters <= 2500 else 99999
+    # Drive: 25 km/h urban = 6.94 m/s + 300s buffer (traffic/parking)
+    drive_sec = int(meters / 6.94) + 300
+    return walk_sec, drive_sec
+
+# Curated POIs for Recife & Olinda (Capital Multicultural de Pernambuco)
+RECIFE_PLACES = [
+    {
+        "id": "marco_zero",
+        "city_slug": "recife",
+        "name": "Praça do Marco Zero",
+        "category": "cultura",
+        "lat": -8.0631,
+        "lon": -34.8711,
+        "duration_min": 75,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 98.5,
+        "rating_avg": 4.9,
+        "rating_count": 4820,
+        "likes_count": 9150,
+        "rank_posicao": 1,
+        "description": "Coração do Recife Antigo, marco geográfico e vista panorâmica para o Parque das Esculturas no mar.",
+        "image_url": "https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "00:00",
+        "closing_time": "23:59"
+    },
+    {
+        "id": "cais_do_sertao",
+        "city_slug": "recife",
+        "name": "Museu Cais do Sertão",
+        "category": "cultura",
+        "lat": -8.0608,
+        "lon": -34.8706,
+        "duration_min": 90,
+        "cost_level": 2,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 96.0,
+        "rating_avg": 4.8,
+        "rating_count": 3120,
+        "likes_count": 6400,
+        "rank_posicao": 2,
+        "description": "Museu interativo e sensorial dedicado à cultura do sertão nordestino e a Luiz Gonzaga.",
+        "image_url": "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "paco_do_frevo",
+        "city_slug": "recife",
+        "name": "Paço do Frevo",
+        "category": "cultura",
+        "lat": -8.0620,
+        "lon": -34.8718,
+        "duration_min": 60,
+        "cost_level": 2,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 94.5,
+        "rating_avg": 4.8,
+        "rating_count": 2780,
+        "likes_count": 5200,
+        "rank_posicao": 3,
+        "description": "Espaço dedicado à salvaguarda e celebração do Frevo, Patrimônio Imaterial da Humanidade pela UNESCO.",
+        "image_url": "https://images.unsplash.com/photo-1582650625119-3a31f8418b7d?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "10:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "rua_do_bom_jesus",
+        "city_slug": "recife",
+        "name": "Rua do Bom Jesus & Sinagoga Kahal Zur Israel",
+        "category": "cultura",
+        "lat": -8.0617,
+        "lon": -34.8713,
+        "duration_min": 60,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 97.0,
+        "rating_avg": 4.9,
+        "rating_count": 3950,
+        "likes_count": 7890,
+        "rank_posicao": 4,
+        "description": "Eleita uma das ruas mais bonitas do mundo; abriga a primeira sinagoga das Américas (século XVII).",
+        "image_url": "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "18:00"
+    },
+    {
+        "id": "restaurante_leite",
+        "city_slug": "recife",
+        "name": "Restaurante Leite (Desde 1882)",
+        "category": "gastronomia",
+        "lat": -8.0612,
+        "lon": -34.8835,
+        "duration_min": 75,
+        "cost_level": 4,
+        "kid_friendly": 0,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 95.0,
+        "rating_avg": 4.8,
+        "rating_count": 2100,
+        "likes_count": 4120,
+        "rank_posicao": 5,
+        "description": "O restaurante mais antigo em funcionamento contínuo do Brasil, famoso pelo Bacalhau e Cartola clássica.",
+        "image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "11:30",
+        "closing_time": "16:00"
+    },
+    {
+        "id": "parraxaxa_boa_viagem",
+        "city_slug": "recife",
+        "name": "Restaurante Parraxaxá",
+        "category": "gastronomia",
+        "lat": -8.1189,
+        "lon": -34.9015,
+        "duration_min": 70,
+        "cost_level": 3,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 97.5,
+        "rating_avg": 4.9,
+        "rating_count": 5200,
+        "likes_count": 8900,
+        "rank_posicao": 6,
+        "description": "Banquete autêntico de comida regional nordestina com carne de sol na nata, baião de dois e doces caseiros.",
+        "image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "11:30",
+        "closing_time": "22:00"
+    },
+    {
+        "id": "instituto_ricardo_brennand",
+        "city_slug": "recife",
+        "name": "Instituto Ricardo Brennand (Castelo)",
+        "category": "cultura",
+        "lat": -8.0645,
+        "lon": -34.9642,
+        "duration_min": 150,
+        "cost_level": 3,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 99.0,
+        "rating_avg": 4.9,
+        "rating_count": 6800,
+        "likes_count": 12500,
+        "rank_posicao": 7,
+        "description": "Castelo medieval cercado por reserva de Mata Atlântica; maior acervo do pintor Frans Post e armas brancas.",
+        "image_url": "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "13:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "oficina_francisco_brennand",
+        "city_slug": "recife",
+        "name": "Oficina Francisco Brennand",
+        "category": "cultura",
+        "lat": -8.0531,
+        "lon": -34.9749,
+        "duration_min": 120,
+        "cost_level": 2,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 96.5,
+        "rating_avg": 4.8,
+        "rating_count": 3400,
+        "likes_count": 6800,
+        "rank_posicao": 8,
+        "description": "Templo monumental de esculturas e cerâmicas a céu aberto criado pelo mestre Francisco Brennand.",
+        "image_url": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "10:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "praia_boa_viagem",
+        "city_slug": "recife",
+        "name": "Praia de Boa Viagem & Calçadão",
+        "category": "praias",
+        "lat": -8.1275,
+        "lon": -34.9011,
+        "duration_min": 120,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 95.5,
+        "rating_avg": 4.7,
+        "rating_count": 8900,
+        "likes_count": 14200,
+        "rank_posicao": 9,
+        "description": "Orla mais famosa do Recife com 8km de calçadão, quiosques com água de coco gelada e piscinas naturais na maré baixa.",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "06:00",
+        "closing_time": "22:00"
+    },
+    {
+        "id": "parque_das_esculturas",
+        "city_slug": "recife",
+        "name": "Parque das Esculturas Francisco Brennand",
+        "category": "cultura",
+        "lat": -8.0642,
+        "lon": -34.8685,
+        "duration_min": 60,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 0,
+        "is_lunch": 0,
+        "score": 90.0,
+        "rating_avg": 4.6,
+        "rating_count": 1850,
+        "likes_count": 3100,
+        "rank_posicao": 10,
+        "description": "Acesso de catamarã ou barquinho a partir do Marco Zero; abriga a monumental Coluna de Cristal de 32 metros.",
+        "image_url": "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "alto_da_se_olinda",
+        "city_slug": "recife",
+        "name": "Alto da Sé & Mirante Histórico de Olinda",
+        "category": "cultura",
+        "lat": -8.0139,
+        "lon": -34.8519,
+        "duration_min": 90,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 98.0,
+        "rating_avg": 4.9,
+        "rating_count": 6400,
+        "likes_count": 11800,
+        "rank_posicao": 11,
+        "description": "Mirante lendário com vista de 360° para Recife e Olinda, barracas de tapiocas tradicionais e feira de artesanato.",
+        "image_url": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "20:00"
+    },
+    {
+        "id": "mosteiro_sao_bento",
+        "city_slug": "recife",
+        "name": "Mosteiro de São Bento de Olinda",
+        "category": "cultura",
+        "lat": -8.0189,
+        "lon": -34.8547,
+        "duration_min": 60,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 0,
+        "score": 95.0,
+        "rating_avg": 4.8,
+        "rating_count": 2900,
+        "likes_count": 5400,
+        "rank_posicao": 12,
+        "description": "Joia do barroco brasileiro com altar-mor folheado a ouro de valor histórico incalculável.",
+        "image_url": "https://images.unsplash.com/photo-1548625361-1250325d7b68?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "oficina_do_sabor",
+        "city_slug": "recife",
+        "name": "Restaurante Oficina do Sabor (Chef César Santos)",
+        "category": "gastronomia",
+        "lat": -8.0163,
+        "lon": -34.8524,
+        "duration_min": 80,
+        "cost_level": 4,
+        "kid_friendly": 1,
+        "must_see": 1,
+        "is_lunch": 1,
+        "score": 96.0,
+        "rating_avg": 4.9,
+        "rating_count": 2300,
+        "likes_count": 4900,
+        "rank_posicao": 13,
+        "description": "Gastronomia pernambucana de autor em Olinda; famosa moranga recheada com frutos do mar e queijo coalho.",
+        "image_url": "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "12:00",
+        "closing_time": "23:00"
+    },
+    {
+        "id": "mercado_sao_jose",
+        "city_slug": "recife",
+        "name": "Mercado de São José & Artesanato",
+        "category": "compras",
+        "lat": -8.0678,
+        "lon": -34.8778,
+        "duration_min": 60,
+        "cost_level": 1,
+        "kid_friendly": 0,
+        "must_see": 0,
+        "is_lunch": 0,
+        "score": 88.0,
+        "rating_avg": 4.5,
+        "rating_count": 3100,
+        "likes_count": 4200,
+        "rank_posicao": 14,
+        "description": "Mercado público de estrutura em ferro fundido de 1875; polo de artesanato em palha, renda e temperos.",
+        "image_url": "https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "08:00",
+        "closing_time": "17:00"
+    },
+    {
+        "id": "jardim_botanico_recife",
+        "city_slug": "recife",
+        "name": "Jardim Botânico do Recife",
+        "category": "natureza",
+        "lat": -8.0772,
+        "lon": -34.9664,
+        "duration_min": 90,
+        "cost_level": 1,
+        "kid_friendly": 1,
+        "must_see": 0,
+        "is_lunch": 0,
+        "score": 92.0,
+        "rating_avg": 4.7,
+        "rating_count": 1950,
+        "likes_count": 3800,
+        "rank_posicao": 15,
+        "description": "Trilhas ecológicas imersas em Mata Atlântica preservada, orquidário, cactário e jardins sensoriais.",
+        "image_url": "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80",
+        "opening_time": "09:00",
+        "closing_time": "15:30"
+    }
+]
+
+def build_pack(output_path, city_slug="recife"):
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    if os.path.exists(output_path):
+        os.remove(output_path)
+
+    conn = sqlite3.connect(output_path)
+    cur = conn.cursor()
+
+    # 1. Metadata Table
+    cur.execute("""
+        CREATE TABLE metadata (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        );
+    """)
+
+    cur.execute("INSERT INTO metadata VALUES ('city_slug', ?)", (city_slug,))
+    cur.execute("INSERT INTO metadata VALUES ('version', '1.0.0')")
+    cur.execute("INSERT INTO metadata VALUES ('created_at', ?)", (datetime.utcnow().isoformat(),))
+    cur.execute("INSERT INTO metadata VALUES ('total_places', ?)", (str(len(RECIFE_PLACES)),))
+
+    # 2. Place Table
+    cur.execute("""
+        CREATE TABLE place (
+            id TEXT PRIMARY KEY,
+            city_slug TEXT NOT NULL,
+            name TEXT NOT NULL,
+            category TEXT NOT NULL,
+            lat REAL NOT NULL,
+            lon REAL NOT NULL,
+            duration_min INTEGER NOT NULL,
+            cost_level INTEGER NOT NULL,
+            kid_friendly INTEGER NOT NULL,
+            must_see INTEGER NOT NULL,
+            is_lunch INTEGER NOT NULL,
+            score REAL NOT NULL,
+            rating_avg REAL NOT NULL,
+            rating_count INTEGER NOT NULL,
+            likes_count INTEGER NOT NULL,
+            rank_posicao INTEGER NOT NULL,
+            description TEXT,
+            image_url TEXT,
+            opening_time TEXT,
+            closing_time TEXT
+        );
+    """)
+
+    # Indexes
+    cur.execute("CREATE INDEX idx_place_city ON place (city_slug);")
+    cur.execute("CREATE INDEX idx_place_category ON place (category);")
+    cur.execute("CREATE INDEX idx_place_rank ON place (rank_posicao);")
+
+    # Insert Places
+    for p in RECIFE_PLACES:
+        cur.execute("""
+            INSERT INTO place (
+                id, city_slug, name, category, lat, lon, duration_min, cost_level,
+                kid_friendly, must_see, is_lunch, score, rating_avg, rating_count,
+                likes_count, rank_posicao, description, image_url, opening_time, closing_time
+            ) VALUES (
+                :id, :city_slug, :name, :category, :lat, :lon, :duration_min, :cost_level,
+                :kid_friendly, :must_see, :is_lunch, :score, :rating_avg, :rating_count,
+                :likes_count, :rank_posicao, :description, :image_url, :opening_time, :closing_time
+            )
+        """, p)
+
+    # 3. Distance Matrix Table (Precomputed Pairwise Distances & Travel Times)
+    cur.execute("""
+        CREATE TABLE matrix (
+            from_id TEXT NOT NULL,
+            to_id TEXT NOT NULL,
+            distance_meters INTEGER NOT NULL,
+            walk_seconds INTEGER NOT NULL,
+            drive_seconds INTEGER NOT NULL,
+            PRIMARY KEY (from_id, to_id)
+        );
+    """)
+
+    pair_count = 0
+    for p1 in RECIFE_PLACES:
+        for p2 in RECIFE_PLACES:
+            if p1["id"] == p2["id"]:
+                dist = 0
+                walk_sec = 0
+                drive_sec = 0
+            else:
+                dist = haversine_meters(p1["lat"], p1["lon"], p2["lat"], p2["lon"])
+                walk_sec, drive_sec = estimate_travel_times(dist)
+
+            cur.execute("""
+                INSERT INTO matrix (from_id, to_id, distance_meters, walk_seconds, drive_seconds)
+                VALUES (?, ?, ?, ?, ?)
+            """, (p1["id"], p2["id"], dist, walk_sec, drive_sec))
+            pair_count += 1
+
+    conn.commit()
+    conn.close()
+
+    file_size_kb = os.path.getsize(output_path) / 1024.0
+    print(f"SUCCESS: Generated city pack for '{city_slug}' at {output_path}")
+    print(f"Stats: {len(RECIFE_PLACES)} places, {pair_count} matrix pairs, {file_size_kb:.2f} KB")
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate One Tour offline city pack SQLite")
+    parser.add_argument("--city", default="recife", help="City slug (default: recife)")
+    parser.add_argument("--output", default="f:/One_tour/mobile/assets/packs/pack_recife.sqlite", help="Output path")
+    args = parser.parse_args()
+
+    build_pack(args.output, args.city)
+
+if __name__ == "__main__":
+    main()
