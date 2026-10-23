@@ -1,6 +1,6 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate((db) => {
-  const Dao = new Dao(db);
+  const dao = new Dao(db);
 
   // 1. Coleção: estados
   const estados = new Collection({
@@ -18,7 +18,7 @@ migrate((db) => {
       { name: "versao_pacote", type: "number" }
     ]
   });
-  Dao.saveCollection(estados);
+  dao.saveCollection(estados);
 
   // 2. Coleção: cidades
   const cidades = new Collection({
@@ -42,7 +42,7 @@ migrate((db) => {
       { name: "descricao_en", type: "text" }
     ]
   });
-  Dao.saveCollection(cidades);
+  dao.saveCollection(cidades);
 
   // 3. Coleção: atracoes
   const atracoes = new Collection({
@@ -76,7 +76,7 @@ migrate((db) => {
       { name: "descricao_en", type: "text" }
     ]
   });
-  Dao.saveCollection(atracoes);
+  dao.saveCollection(atracoes);
 
   // 4. Coleção: campanhas_ads (House Ads Network)
   const campanhasAds = new Collection({
@@ -99,14 +99,14 @@ migrate((db) => {
       { name: "data_fim", type: "date" }
     ]
   });
-  Dao.saveCollection(campanhasAds);
+  dao.saveCollection(campanhasAds);
 }, (db) => {
-  const Dao = new Dao(db);
+  const dao = new Dao(db);
   const collections = ["campanhas_ads", "atracoes", "cidades", "estados"];
   for (const name of collections) {
     try {
-      const col = Dao.findCollectionByNameOrId(name);
-      if (col) Dao.deleteCollection(col);
+      const col = dao.findCollectionByNameOrId(name);
+      if (col) dao.deleteCollection(col);
     } catch (_) {}
   }
 });

@@ -1,19 +1,19 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate((db) => {
-  const Dao = new Dao(db);
+  const dao = new Dao(db);
 
   // 1. Inserir Estado PE
-  const colEstados = Dao.findCollectionByNameOrId("estados");
+  const colEstados = dao.findCollectionByNameOrId("estados");
   const estadoPe = new Record(colEstados, {
     sigla: "PE",
     nome: "Pernambuco",
     status: "ativo",
     versao_pacote: 1
   });
-  Dao.saveRecord(estadoPe);
+  dao.saveRecord(estadoPe);
 
   // 2. Inserir Cidades Polo
-  const colCidades = Dao.findCollectionByNameOrId("cidades");
+  const colCidades = dao.findCollectionByNameOrId("cidades");
   const cidades = [
     { nome: "Recife", slug: "recife", estado_sigla: "PE", tag: "Capital Multicultural", lat: -8.0631, lon: -34.8711, package_size: "14 MB", destaque: true, descricao_pt: "Capital dos rios e pontes, berço do frevo e polo gastronômico.", descricao_en: "Capital of rivers and bridges, birthplace of frevo and culinary hub." },
     { nome: "Porto de Galinhas", slug: "porto_de_galinhas", estado_sigla: "PE", tag: "Piscinas Naturais & Jangadas", lat: -8.5042, lon: -35.0028, package_size: "9 MB", destaque: true, descricao_pt: "Famosa pelas águas mornas cristalinas e recifes de corais.", descricao_en: "Famous for warm crystal-clear waters and coral reefs." },
@@ -24,11 +24,11 @@ migrate((db) => {
 
   for (const c of cidades) {
     const rec = new Record(colCidades, c);
-    Dao.saveRecord(rec);
+    dao.saveRecord(rec);
   }
 
   // 3. Inserir Atrações Principais
-  const colAtracoes = Dao.findCollectionByNameOrId("atracoes");
+  const colAtracoes = dao.findCollectionByNameOrId("atracoes");
   const atracoes = [
     {
       nome: "Praça do Marco Zero",
@@ -100,11 +100,11 @@ migrate((db) => {
 
   for (const a of atracoes) {
     const rec = new Record(colAtracoes, a);
-    Dao.saveRecord(rec);
+    dao.saveRecord(rec);
   }
 
   // 4. Inserir Anúncio House Ads Piloto
-  const colAds = Dao.findCollectionByNameOrId("campanhas_ads");
+  const colAds = dao.findCollectionByNameOrId("campanhas_ads");
   const ad1 = new Record(colAds, {
     titulo: "Passeio de Catamarã pelos Rios do Recife",
     link_destino: "https://onetour.app/parceiros/catamara-recife",
@@ -114,5 +114,5 @@ migrate((db) => {
     ativo: true,
     prioridade: 10
   });
-  Dao.saveRecord(ad1);
+  dao.saveRecord(ad1);
 });
