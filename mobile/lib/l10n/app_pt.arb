@@ -1,0 +1,94 @@
+{
+  "@@locale": "pt",
+  "appTitle": "One Tour",
+  "tabExplore": "Explorar",
+  "tabItineraries": "Roteiros",
+  "tabMap": "Mapa",
+  "tabSaved": "Salvos",
+  "searchPlaceholder": "Buscar cidades, praias, museus...",
+  "topDestinations": "Cidades Polo em Destaque",
+  "topRated": "Mais Amados pelos Turistas",
+  "rankingBadge": "#{rank} no Estado",
+  "@rankingBadge": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  },
+  "ratingReviews": "{count} avaliações",
+  "@ratingReviews": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "mustSee": "Imperdível",
+  "offlineAvailable": "Disponível Offline",
+  "downloadGuide": "Baixar Guia & Mapa ({size})",
+  "@downloadGuide": {
+    "placeholders": {
+      "size": { "type": "String" }
+    }
+  },
+  "downloading": "Baixando {progress}%",
+  "@downloading": {
+    "placeholders": {
+      "progress": { "type": "int" }
+    }
+  },
+  "createSmartTrip": "Montar Roteiro Inteligente",
+  "tripPlannerTitle": "Assistente de Roteirização",
+  "howManyDays": "Quantos dias você vai ficar?",
+  "daysCount": "{count, plural, =1{1 dia} other{{count} dias}}",
+  "@daysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "whatPace": "Qual o seu ritmo de viagem?",
+  "paceRelaxed": "Tranquilo (2 a 3 pontos/dia)",
+  "paceModerate": "Moderado (3 a 4 pontos/dia)",
+  "paceIntense": "Intenso (5 a 6 pontos/dia)",
+  "whoTravels": "Com quem você viaja?",
+  "travelerSolo": "Viajando Solo",
+  "travelerCouple": "Casal",
+  "travelerFamily": "Família com Crianças",
+  "travelerFriends": "Grupo de Amigos",
+  "interestsTitle": "O que você mais gosta?",
+  "interestBeach": "Praias & Litoral",
+  "interestCulture": "História & Cultura",
+  "interestGastronomy": "Gastronomia",
+  "interestNature": "Ecoturismo",
+  "interestNightlife": "Noite & Festas",
+  "btnGenerateTrip": "Gerar Roteiro Otimizado",
+  "dayTitle": "Dia {day}",
+  "@dayTitle": {
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
+  "lunchBreak": "Pausa para Almoço",
+  "walkTime": "{min} min a pé ({dist})",
+  "@walkTime": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "dist": { "type": "String" }
+    }
+  },
+  "driveTime": "{min} min de carro ({dist})",
+  "@driveTime": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "dist": { "type": "String" }
+    }
+  },
+  "viewOnMap": "Ver no Mapa",
+  "shareTrip": "Compartilhar Roteiro",
+  "likesCount": "{count} curtidas",
+  "@likesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "emptySavedTitle": "Nenhum ponto salvo ainda",
+  "emptySavedSubtitle": "Toque no coração de qualquer atração para salvar aqui e acessar offline.",
+  "houseAdsSponsored": "Experiência Recomendada"
+}

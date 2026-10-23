@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # ==============================================================================
+  # 1. PocketBase: Backoffice, CMS Editorial e Upload de Mídias
+  # ==============================================================================
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: onetour_pocketbase
+    restart: always
+    command:
+      - /pocketbase/pocketbase
+      - serve
+      - --http=0.0.0.0:8090
+      - --dir=/pb_data
+      - --migrationsDir=/pb_migrations
+      - --publicDir=/pb_public
+    ports:
+      - "${PB_PORT:-8090}:8090"
+    volumes:
+      - ./pocketbase/pb_data:/pb_data
+      - ./pocketbase/pb_migrations:/pb_migrations:ro
+      - ./pocketbase/pb_public:/pb_public
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8090/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - onetour_net
+
+  # ==============================================================================
+  # 2. PostgreSQL 16 + PostGIS: Telemetria de Anúncios e Análise Espacial
+  # ==============================================================================
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: onetour_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-onetour_ads}
+      POSTGRES_USER: ${POSTGRES_USER:-onetour_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-onetour_secure_postgres_pass_2026!}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./postgres/pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-onetour_admin} -d ${POSTGRES_DB:-onetour_ads}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - onetour_net
+
+  # ==============================================================================
+  # 3. MinIO (S3 Compatível): Distribuição de Mapas PMTiles e Pacotes SQLite
+  # ==============================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: onetour_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-onetour_s3_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-onetour_s3_super_secret_password_2026!}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - ./minio/data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - onetour_net
+
+networks:
+  onetour_net:
+    name: onetour_network
+    driver: bridge

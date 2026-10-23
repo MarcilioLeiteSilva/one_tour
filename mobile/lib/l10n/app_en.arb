@@ -1,0 +1,94 @@
+{
+  "@@locale": "en",
+  "appTitle": "One Tour",
+  "tabExplore": "Explore",
+  "tabItineraries": "Itineraries",
+  "tabMap": "Map",
+  "tabSaved": "Saved",
+  "searchPlaceholder": "Search cities, beaches, museums...",
+  "topDestinations": "Featured Destinations",
+  "topRated": "Most Loved by Travelers",
+  "rankingBadge": "#{rank} in State",
+  "@rankingBadge": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  },
+  "ratingReviews": "{count} reviews",
+  "@ratingReviews": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "mustSee": "Must See",
+  "offlineAvailable": "Available Offline",
+  "downloadGuide": "Download Guide & Map ({size})",
+  "@downloadGuide": {
+    "placeholders": {
+      "size": { "type": "String" }
+    }
+  },
+  "downloading": "Downloading {progress}%",
+  "@downloading": {
+    "placeholders": {
+      "progress": { "type": "int" }
+    }
+  },
+  "createSmartTrip": "Create Smart Itinerary",
+  "tripPlannerTitle": "AI Trip Planner",
+  "howManyDays": "How many days will you stay?",
+  "daysCount": "{count, plural, =1{1 day} other{{count} days}}",
+  "@daysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "whatPace": "What is your travel pace?",
+  "paceRelaxed": "Relaxed (2 to 3 stops/day)",
+  "paceModerate": "Moderate (3 to 4 stops/day)",
+  "paceIntense": "Intense (5 to 6 stops/day)",
+  "whoTravels": "Who are you traveling with?",
+  "travelerSolo": "Solo Traveler",
+  "travelerCouple": "Couple",
+  "travelerFamily": "Family with Kids",
+  "travelerFriends": "Group of Friends",
+  "interestsTitle": "What interests you most?",
+  "interestBeach": "Beaches & Coast",
+  "interestCulture": "History & Culture",
+  "interestGastronomy": "Gastronomy",
+  "interestNature": "Ecotourism",
+  "interestNightlife": "Nightlife & Events",
+  "btnGenerateTrip": "Generate Optimized Trip",
+  "dayTitle": "Day {day}",
+  "@dayTitle": {
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
+  "lunchBreak": "Lunch Break",
+  "walkTime": "{min} min walk ({dist})",
+  "@walkTime": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "dist": { "type": "String" }
+    }
+  },
+  "driveTime": "{min} min drive ({dist})",
+  "@driveTime": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "dist": { "type": "String" }
+    }
+  },
+  "viewOnMap": "View on Map",
+  "shareTrip": "Share Itinerary",
+  "likesCount": "{count} likes",
+  "@likesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "emptySavedTitle": "No saved places yet",
+  "emptySavedSubtitle": "Tap the heart on any attraction to save here and access offline.",
+  "houseAdsSponsored": "Recommended Experience"
+}

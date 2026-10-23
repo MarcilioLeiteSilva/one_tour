@@ -1,0 +1,49 @@
+# ==============================================================================
+# One Tour Repository - Root .gitignore
+# ==============================================================================
+
+# Ambientes e Segredos (NUNCA comitar)
+.env
+*.env
+!.env.example
+server/.env
+
+# Bancos de Dados e Volumes Locais do Docker
+server/postgres/pgdata/
+server/pocketbase/pb_data/
+server/minio/data/
+
+# Logs e Arquivos Temporários
+*.log
+*.tmp
+*.bak
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs e Editores
+.idea/
+.vscode/
+*.suo
+*.user
+*.workspace
+
+# Flutter e Dart (Mobile)
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/App.framework
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
