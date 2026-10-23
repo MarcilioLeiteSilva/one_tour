@@ -8,6 +8,7 @@ import '../../features/trip_planner/presentation/trip_planner_screen.dart';
 import '../../features/trip_planner/presentation/trip_itinerary_screen.dart';
 import '../../features/map/presentation/map_screen.dart';
 import '../../features/saved/presentation/saved_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorExploreKey = GlobalKey<NavigatorState>();
@@ -84,6 +85,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id'] ?? 'roteiro_demo';
           return TripItineraryScreen(tripId: id);
         },
+      ),
+      GoRoute(
+        path: '/notificacoes',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
   );

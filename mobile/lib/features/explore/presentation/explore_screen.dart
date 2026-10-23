@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../data/mock_pe_data.dart';
 import '../../house_ads/presentation/house_ad_banner.dart';
 import '../../house_ads/services/house_ads_service.dart';
+import '../../notifications/services/notification_service.dart';
 
 class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
@@ -85,6 +86,37 @@ class ExploreScreen extends ConsumerWidget {
                     ),
                     Row(
                       children: [
+                        // Ícone de Notificações com Badge
+                        IconButton(
+                          icon: Stack(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                                ),
+                                child: const Icon(Icons.notifications_outlined, size: 20),
+                              ),
+                              if (ref.watch(unreadNotificationsCountProvider) > 0)
+                                Positioned(
+                                  top: 2,
+                                  right: 2,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          onPressed: () => context.push('/notificacoes'),
+                          tooltip: 'Avisos & Promoções',
+                        ),
                         // Seletor de Idioma PT / EN
                         IconButton(
                           icon: Container(
