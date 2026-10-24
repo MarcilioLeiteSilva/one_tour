@@ -10,6 +10,7 @@ import '../../house_ads/services/house_ads_service.dart';
 import '../../trip_planner/services/local_db_service.dart';
 import '../../trip_planner/presentation/trip_planner_controller.dart';
 import '../../social/services/social_service.dart';
+import 'explore_controller.dart';
 
 class CityDetailScreen extends ConsumerStatefulWidget {
   final String cityId;
@@ -56,6 +57,7 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
     }
 
     await LocalDbService.instance.markCityDownloaded(widget.cityId);
+    ref.invalidate(downloadedPacksProvider);
 
     if (mounted) {
       setState(() {
@@ -66,6 +68,22 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
         const SnackBar(
           backgroundColor: Colors.green,
           content: Text('✓ Pacote offline da cidade baixado e salvo no SQLite com sucesso!'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _removeDownload() async {
+    await LocalDbService.instance.removeCityDownloaded(widget.cityId);
+    ref.invalidate(downloadedPacksProvider);
+    if (mounted) {
+      setState(() {
+        _isDownloaded = false;
+        _downloadProgress = 0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pacote offline removido do dispositivo.'),
         ),
       );
     }
@@ -217,6 +235,12 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
                                 ),
                                 onPressed: _isDownloading ? null : _startDownload,
                                 child: Text(_isDownloading ? '$_downloadProgress%' : 'Baixar'),
+                              )
+                            else
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded, color: Colors.grey, size: 20),
+                                tooltip: 'Remover pacote offline',
+                                onPressed: _removeDownload,
                               ),
                           ],
                         ),

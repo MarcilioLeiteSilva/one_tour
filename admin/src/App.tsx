@@ -6,6 +6,7 @@ import { AdsTab } from './components/AdsTab';
 import { RankingsTab } from './components/RankingsTab';
 import { ReviewsTab } from './components/ReviewsTab';
 import { ContentTab } from './components/ContentTab';
+import { NotificationsTab } from './components/NotificationsTab';
 import {
   OverviewStats,
   AdPerformanceItem,
@@ -285,6 +286,16 @@ export const App: React.FC = () => {
             isLoading={isLoading}
             onRefresh={loadData}
             selectedUf={selectedUf}
+          />
+        )}
+
+        {currentTab === 'notifications' && (
+          <NotificationsTab
+            cities={cities}
+            selectedUf={selectedUf}
+            onShowToast={showToast}
+            isAuthenticated={isAuthenticated}
+            onOpenLogin={() => setIsLoginModalOpen(true)}
           />
         )}
       </main>

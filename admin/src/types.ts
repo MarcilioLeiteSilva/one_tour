@@ -72,3 +72,23 @@ export interface PbAttractionItem {
   lon?: number;
   descricao_pt?: string;
 }
+
+export interface PushNotificationPayload {
+  topic: string;
+  title: string;
+  body: string;
+  image_url?: string;
+  action_type?: 'open_city' | 'open_attraction' | 'open_url' | 'open_trip';
+  action_value?: string;
+}
+
+export interface SentNotificationRecord {
+  id: string;
+  topic: string;
+  title: string;
+  body: string;
+  image_url?: string;
+  action_type: string;
+  action_value: string;
+  sent_at: string;
+}

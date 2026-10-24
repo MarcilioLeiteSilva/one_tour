@@ -29,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'rankings', label: 'Rankings & Score' },
     { id: 'reviews', label: 'Moderação' },
     { id: 'content', label: 'Conteúdo (PB)' },
+    { id: 'notifications', label: 'Push (FCM)' },
   ];
 
   return (

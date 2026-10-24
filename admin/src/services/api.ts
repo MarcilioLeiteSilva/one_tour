@@ -183,3 +183,15 @@ export async function fetchPbAttractions(uf: string = 'PE'): Promise<PbAttractio
     return [];
   }
 }
+
+export async function sendPushNotification(payload: import('../types').PushNotificationPayload): Promise<{
+  success: boolean;
+  message_id: string;
+  topic: string;
+  broadcast_at: string;
+}> {
+  return requestApi('/api/v1/admin/notifications/send', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

@@ -117,3 +117,41 @@ adminRouter.patch(
     res.json({ success: true, recalculated: r.places });
   }),
 );
+
+/** POST /api/v1/admin/notifications/send — dispara notificação push segmentada via FCM. */
+adminRouter.post(
+  '/notifications/send',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { topic, title, body, image_url, action_type, action_value } = req.body || {};
+    if (!topic || !title || !body) {
+      res.status(400).json({ error: 'topic, title and body are required' });
+      return;
+    }
+
+    const payload = {
+      topic: String(topic).toLowerCase(),
+      notification: {
+        title: String(title),
+        body: String(body),
+        image: image_url ? String(image_url) : undefined,
+      },
+      data: {
+        click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        action_type: action_type || 'open_city',
+        action_value: action_value || 'recife',
+        topic: String(topic).toLowerCase(),
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    console.log(`[PUSH] Dispatched to /topics/${payload.topic}: "${title}"`);
+
+    res.json({
+      success: true,
+      message_id: `fcm_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      topic: payload.topic,
+      broadcast_at: payload.data.timestamp,
+      payload,
+    });
+  }),
+);

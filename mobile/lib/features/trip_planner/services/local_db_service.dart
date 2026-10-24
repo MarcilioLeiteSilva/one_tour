@@ -523,6 +523,24 @@ class LocalDbService {
     }
   }
 
+  Future<void> removeCityDownloaded(String citySlug) async {
+    await init();
+    final slug = citySlug.toLowerCase().trim();
+    _inMemoryDownloadedPacks.remove(slug);
+
+    if (_userDb != null) {
+      try {
+        await _userDb!.delete(
+          'downloaded_packs',
+          where: 'city_slug = ?',
+          whereArgs: [slug],
+        );
+      } catch (e) {
+        debugPrint('Error removing downloaded pack: $e');
+      }
+    }
+  }
+
   Future<Set<String>> getDownloadedCities() async {
     await init();
 
