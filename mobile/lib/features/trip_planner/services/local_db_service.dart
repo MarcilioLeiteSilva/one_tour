@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart' as sql;
@@ -12,6 +13,11 @@ class LocalDbService {
   final Map<String, TripPlan> _inMemorySavedTrips = {};
   final Set<String> _inMemoryLikes = {};
   final List<Map<String, dynamic>> _inMemoryReviews = [];
+  final Set<String> _inMemoryDownloadedPacks = {'recife'};
+  final Map<String, String> _inMemoryMeta = {};
+  final List<Map<String, dynamic>> _inMemoryPendingEvents = [];
+  int _inMemoryEventSeq = 0;
+  List<Map<String, dynamic>> _inMemoryStatsCache = [];
 
   static final LocalDbService instance = LocalDbService._internal();
   LocalDbService._internal();
@@ -28,7 +34,7 @@ class LocalDbService {
 
       _userDb = await sql.openDatabase(
         path,
-        version: 1,
+        version: 3,
         onCreate: (db, version) async {
           // 1. Saved Trips table
           await db.execute('''
@@ -62,6 +68,30 @@ class LocalDbService {
               synced INTEGER NOT NULL DEFAULT 0
             );
           ''');
+
+          // 4. Downloaded Packs table
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS downloaded_packs (
+              city_slug TEXT PRIMARY KEY,
+              downloaded_at TEXT NOT NULL
+            );
+          ''');
+
+          // 5. Social sync: device id, offline event queue and stats cache
+          await _createSocialTables(db);
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS downloaded_packs (
+                city_slug TEXT PRIMARY KEY,
+                downloaded_at TEXT NOT NULL
+              );
+            ''');
+          }
+          if (oldVersion < 3) {
+            await _createSocialTables(db);
+          }
         },
       );
       _isInitialized = true;
@@ -70,6 +100,162 @@ class LocalDbService {
       _isInitialized = true;
     }
   }
+
+  Future<void> _createSocialTables(sql.Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS app_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS pending_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        payload TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS place_stats_cache (
+        place_id TEXT PRIMARY KEY,
+        data TEXT NOT NULL
+      );
+    ''');
+  }
+
+  // ==========================================
+  // APP META, OFFLINE EVENT QUEUE & STATS CACHE
+  // ==========================================
+
+  Future<String?> getMeta(String key) async {
+    await init();
+    if (_userDb != null) {
+      try {
+        final rows = await _userDb!.query('app_meta', where: 'key = ?', whereArgs: [key], limit: 1);
+        if (rows.isNotEmpty) return rows.first['value'] as String;
+        return null;
+      } catch (e) {
+        debugPrint('Error reading meta: $e');
+      }
+    }
+    return _inMemoryMeta[key];
+  }
+
+  Future<void> setMeta(String key, String value) async {
+    await init();
+    _inMemoryMeta[key] = value;
+    if (_userDb != null) {
+      try {
+        await _userDb!.insert(
+          'app_meta',
+          {'key': key, 'value': value},
+          conflictAlgorithm: sql.ConflictAlgorithm.replace,
+        );
+      } catch (e) {
+        debugPrint('Error writing meta: $e');
+      }
+    }
+  }
+
+  /// Appends an event (JSON) to the offline outbox. Returns its row id.
+  Future<int> enqueueEvent(String payloadJson) async {
+    await init();
+    final createdAt = DateTime.now().toIso8601String();
+    if (_userDb != null) {
+      try {
+        return await _userDb!.insert('pending_events', {
+          'payload': payloadJson,
+          'created_at': createdAt,
+        });
+      } catch (e) {
+        debugPrint('Error enqueueing event: $e');
+      }
+    }
+    final id = ++_inMemoryEventSeq;
+    _inMemoryPendingEvents.add({'id': id, 'payload': payloadJson, 'created_at': createdAt});
+    return id;
+  }
+
+  /// Oldest-first pending events (`id`, `payload`).
+  Future<List<Map<String, dynamic>>> getPendingEvents({int limit = 100}) async {
+    await init();
+    if (_userDb != null) {
+      try {
+        final rows = await _userDb!.query('pending_events', orderBy: 'id ASC', limit: limit);
+        return rows.map((r) => Map<String, dynamic>.from(r)).toList();
+      } catch (e) {
+        debugPrint('Error reading pending events: $e');
+      }
+    }
+    return _inMemoryPendingEvents.take(limit).map((r) => Map<String, dynamic>.from(r)).toList();
+  }
+
+  Future<void> deletePendingEvents(List<int> ids) async {
+    if (ids.isEmpty) return;
+    await init();
+    _inMemoryPendingEvents.removeWhere((e) => ids.contains(e['id']));
+    if (_userDb != null) {
+      try {
+        final marks = List.filled(ids.length, '?').join(',');
+        await _userDb!.delete('pending_events', where: 'id IN ($marks)', whereArgs: ids);
+      } catch (e) {
+        debugPrint('Error deleting pending events: $e');
+      }
+    }
+  }
+
+  Future<int> pendingEventsCount() async {
+    await init();
+    if (_userDb != null) {
+      try {
+        final rows = await _userDb!.rawQuery('SELECT COUNT(*) AS n FROM pending_events');
+        return (rows.first['n'] as num).toInt();
+      } catch (e) {
+        debugPrint('Error counting pending events: $e');
+      }
+    }
+    return _inMemoryPendingEvents.length;
+  }
+
+  /// Replaces the cached community stats (raw JSON maps from the API).
+  Future<void> replaceStatsCache(List<Map<String, dynamic>> stats) async {
+    await init();
+    _inMemoryStatsCache = stats;
+    if (_userDb != null) {
+      try {
+        await _userDb!.transaction((txn) async {
+          await txn.delete('place_stats_cache');
+          final batch = txn.batch();
+          for (final s in stats) {
+            batch.insert(
+              'place_stats_cache',
+              {'place_id': s['place_id'].toString(), 'data': jsonEncode(s)},
+              conflictAlgorithm: sql.ConflictAlgorithm.replace,
+            );
+          }
+          await batch.commit(noResult: true);
+        });
+      } catch (e) {
+        debugPrint('Error saving stats cache: $e');
+      }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> loadStatsCache() async {
+    await init();
+    if (_userDb != null) {
+      try {
+        final rows = await _userDb!.query('place_stats_cache');
+        return rows
+            .map((r) => Map<String, dynamic>.from(jsonDecode(r['data'] as String) as Map))
+            .toList();
+      } catch (e) {
+        debugPrint('Error loading stats cache: $e');
+      }
+    }
+    return List.of(_inMemoryStatsCache);
+  }
+
 
   // ==========================================
   // TRIP PLANS
@@ -273,6 +459,104 @@ class LocalDbService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getReviewsForPlace(String placeId) async {
+    await init();
+    if (_userDb != null) {
+      try {
+        final maps = await _userDb!.query(
+          'user_reviews',
+          where: 'place_id = ?',
+          whereArgs: [placeId],
+          orderBy: 'created_at DESC',
+        );
+        return maps;
+      } catch (e) {
+        debugPrint('Error getting reviews: $e');
+      }
+    }
+    return _inMemoryReviews.where((r) => r['place_id'] == placeId).toList();
+  }
+
+  // ==========================================
+  // OFFLINE CITY PACKS
+  // ==========================================
+
+  Future<bool> isCityDownloaded(String citySlug) async {
+    await init();
+    final slug = citySlug.toLowerCase().trim();
+
+    if (_userDb != null) {
+      try {
+        final maps = await _userDb!.query(
+          'downloaded_packs',
+          where: 'city_slug = ?',
+          whereArgs: [slug],
+          limit: 1,
+        );
+        return maps.isNotEmpty;
+      } catch (e) {
+        debugPrint('Error checking downloaded pack: $e');
+      }
+    }
+
+    return _inMemoryDownloadedPacks.contains(slug);
+  }
+
+  Future<void> markCityDownloaded(String citySlug) async {
+    await init();
+    final slug = citySlug.toLowerCase().trim();
+    _inMemoryDownloadedPacks.add(slug);
+
+    if (_userDb != null) {
+      try {
+        await _userDb!.insert(
+          'downloaded_packs',
+          {
+            'city_slug': slug,
+            'downloaded_at': DateTime.now().toIso8601String(),
+          },
+          conflictAlgorithm: sql.ConflictAlgorithm.replace,
+        );
+      } catch (e) {
+        debugPrint('Error marking pack downloaded: $e');
+      }
+    }
+  }
+
+  Future<Set<String>> getDownloadedCities() async {
+    await init();
+
+    if (_userDb != null) {
+      try {
+        final maps = await _userDb!.query('downloaded_packs');
+        final fromDb = maps.map((m) => m['city_slug'] as String).toSet();
+        return {..._inMemoryDownloadedPacks, ...fromDb};
+      } catch (e) {
+        debugPrint('Error getting downloaded packs: $e');
+      }
+    }
+
+    return Set.from(_inMemoryDownloadedPacks);
+  }
+
+  Future<void> deleteCityPack(String citySlug) async {
+    await init();
+    final slug = citySlug.toLowerCase().trim();
+    _inMemoryDownloadedPacks.remove(slug);
+
+    if (_userDb != null) {
+      try {
+        await _userDb!.delete(
+          'downloaded_packs',
+          where: 'city_slug = ?',
+          whereArgs: [slug],
+        );
+      } catch (e) {
+        debugPrint('Error deleting downloaded pack: $e');
+      }
+    }
+  }
+
   // ==========================================
   // CURATED POI CATALOG (OFFLINE PACK)
   // ==========================================
@@ -286,6 +570,8 @@ class LocalDbService {
       return _carneirosPlaces;
     } else if (slug == 'noronha' || slug.contains('noronha')) {
       return _noronhaPlaces;
+    } else if (slug == 'olinda' || slug.contains('olinda')) {
+      return _olindaPlaces;
     }
     return _recifePlaces;
   }
@@ -309,7 +595,7 @@ class LocalDbService {
         likesCount: 9150,
         rankPosicao: 1,
         description: 'Coração do Recife Antigo, marco geográfico e vista panorâmica para o Parque das Esculturas.',
-        imageUrl: 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?auto=format&fit=crop&w=800&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1680788842764-b5c9bc78ce59?auto=format&fit=crop&w=800&q=80',
         openingTime: '00:00',
         closingTime: '23:59',
       ),
@@ -353,7 +639,7 @@ class LocalDbService {
         likesCount: 5200,
         rankPosicao: 3,
         description: 'Espaço dedicado à salvaguarda e celebração do Frevo, Patrimônio Imaterial da Humanidade pela UNESCO.',
-        imageUrl: 'https://images.unsplash.com/photo-1582650625119-3a31f8418b7d?auto=format&fit=crop&w=800&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
         openingTime: '10:00',
         closingTime: '17:00',
       ),
@@ -507,7 +793,7 @@ class LocalDbService {
         likesCount: 3100,
         rankPosicao: 10,
         description: 'Acesso de barquinho a partir do Marco Zero; abriga a Coluna de Cristal de 32 metros.',
-        imageUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=800&q=80',
         openingTime: '08:00',
         closingTime: '17:00',
       ),
@@ -551,7 +837,7 @@ class LocalDbService {
         likesCount: 5400,
         rankPosicao: 12,
         description: 'Joia do barroco brasileiro com altar-mor folheado a ouro de valor histórico incalculável.',
-        imageUrl: 'https://images.unsplash.com/photo-1548625361-1250325d7b68?auto=format&fit=crop&w=800&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
         openingTime: '09:00',
         closingTime: '17:00',
       ),
@@ -1292,6 +1578,185 @@ class LocalDbService {
       imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
       openingTime: '12:00',
       closingTime: '23:30',
+    ),
+  ];
+
+  static const List<Place> _olindaPlaces = [
+    Place(
+      id: 'alto_da_se',
+      citySlug: 'olinda',
+      name: 'Alto da Sé & Mirante Panorâmico',
+      category: 'cultura',
+      lat: -8.0139,
+      lon: -34.8519,
+      durationMin: 90,
+      costLevel: 1,
+      kidFriendly: true,
+      mustSee: true,
+      isLunch: false,
+      score: 98.5,
+      ratingAvg: 4.9,
+      ratingCount: 5400,
+      likesCount: 9800,
+      rankPosicao: 1,
+      description: 'Vista deslumbrante das torres barrocas de Olinda com o mar e o skyline do Recife ao fundo. Ponto alto das tradicionais tapiocas.',
+      imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
+      openingTime: '08:00',
+      closingTime: '21:00',
+    ),
+    Place(
+      id: 'convento_sao_francisco',
+      citySlug: 'olinda',
+      name: 'Convento de São Francisco',
+      category: 'cultura',
+      lat: -8.0175,
+      lon: -34.8486,
+      durationMin: 60,
+      costLevel: 2,
+      kidFriendly: true,
+      mustSee: true,
+      isLunch: false,
+      score: 96.5,
+      ratingAvg: 4.8,
+      ratingCount: 3800,
+      likesCount: 7200,
+      rankPosicao: 2,
+      description: 'Primeiro convento da Ordem Franciscana no Brasil (1585), com ricos painéis de azulejos portugueses e arquitetura barroca.',
+      imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
+      openingTime: '09:00',
+      closingTime: '17:00',
+    ),
+    Place(
+      id: 'mosteiro_sao_bento_olinda',
+      citySlug: 'olinda',
+      name: 'Mosteiro de São Bento de Olinda',
+      category: 'cultura',
+      lat: -8.0205,
+      lon: -34.8533,
+      durationMin: 60,
+      costLevel: 1,
+      kidFriendly: true,
+      mustSee: true,
+      isLunch: false,
+      score: 96.0,
+      ratingAvg: 4.8,
+      ratingCount: 3100,
+      likesCount: 6500,
+      rankPosicao: 3,
+      description: 'Igreja barroca de valor monumental com altar-mor talhado e folheado a ouro, célebre pelas missas com canto gregoriano aos domingos.',
+      imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
+      openingTime: '08:30',
+      closingTime: '17:00',
+    ),
+    Place(
+      id: 'casa_bonecos_gigantes',
+      citySlug: 'olinda',
+      name: 'Casa dos Bonecos Gigantes de Olinda',
+      category: 'cultura',
+      lat: -8.0146,
+      lon: -34.8514,
+      durationMin: 45,
+      costLevel: 2,
+      kidFriendly: true,
+      mustSee: true,
+      isLunch: false,
+      score: 95.0,
+      ratingAvg: 4.7,
+      ratingCount: 2900,
+      likesCount: 5900,
+      rankPosicao: 4,
+      description: 'Espaço interativo com os icônicos bonecos de mais de 3 metros que descem as ladeiras no Carnaval de Olinda.',
+      imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
+      openingTime: '09:00',
+      closingTime: '18:00',
+    ),
+    Place(
+      id: 'quatro_cantos',
+      citySlug: 'olinda',
+      name: 'Quatro Cantos & Ladeiras Históricas',
+      category: 'cultura',
+      lat: -8.0162,
+      lon: -34.8505,
+      durationMin: 45,
+      costLevel: 1,
+      kidFriendly: true,
+      mustSee: true,
+      isLunch: false,
+      score: 94.5,
+      ratingAvg: 4.8,
+      ratingCount: 3400,
+      likesCount: 6200,
+      rankPosicao: 5,
+      description: 'O cruzamento mais famoso da folia olindense, cercado por casarios coloniais coloridos e ateliês de artistas plásticos.',
+      imageUrl: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+      openingTime: '00:00',
+      closingTime: '23:59',
+    ),
+    Place(
+      id: 'oficina_do_sabor_olinda',
+      citySlug: 'olinda',
+      name: 'Restaurante Oficina do Sabor (Chef César Santos)',
+      category: 'gastronomia',
+      lat: -8.0140,
+      lon: -34.8510,
+      durationMin: 75,
+      costLevel: 4,
+      kidFriendly: true,
+      mustSee: true,
+      isLunch: true,
+      score: 97.0,
+      ratingAvg: 4.9,
+      ratingCount: 3600,
+      likesCount: 7800,
+      rankPosicao: 6,
+      description: 'Alta gastronomia pernambucana no Alto da Sé, famoso pelo jerimum recheado com camarão e frutos do mar com vista panorâmica.',
+      imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+      openingTime: '12:00',
+      closingTime: '23:00',
+    ),
+    Place(
+      id: 'catedral_da_se',
+      citySlug: 'olinda',
+      name: 'Catedral da Sé de Olinda (Igreja de São Salvador)',
+      category: 'cultura',
+      lat: -8.0143,
+      lon: -34.8518,
+      durationMin: 45,
+      costLevel: 1,
+      kidFriendly: true,
+      mustSee: false,
+      isLunch: false,
+      score: 95.5,
+      ratingAvg: 4.8,
+      ratingCount: 2800,
+      likesCount: 5300,
+      rankPosicao: 7,
+      description: 'A mais antiga diocese do Brasil, sede episcopal desde 1676 com impressionante vista para a costa pernambucana.',
+      imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
+      openingTime: '08:00',
+      closingTime: '18:00',
+    ),
+    Place(
+      id: 'mercado_da_ribeira',
+      citySlug: 'olinda',
+      name: 'Mercado da Ribeira & Galerias de Arte',
+      category: 'cultura',
+      lat: -8.0182,
+      lon: -34.8512,
+      durationMin: 45,
+      costLevel: 1,
+      kidFriendly: true,
+      mustSee: false,
+      isLunch: false,
+      score: 93.0,
+      ratingAvg: 4.6,
+      ratingCount: 2100,
+      likesCount: 4200,
+      rankPosicao: 8,
+      description: 'Construção colonial do século XVII com arcadas características, hoje abrigando lojas de artesanato, xilogravuras e oficinas de arte.',
+      imageUrl: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=800&q=80',
+      openingTime: '09:00',
+      closingTime: '18:00',
     ),
   ];
 }

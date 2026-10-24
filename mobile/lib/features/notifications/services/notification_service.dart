@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../domain/notification_model.dart';
+
+/// Top-level background message handler required by Firebase Messaging
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+  } catch (_) {}
+  debugPrint('🔔 [FCM Background] Message received: ${message.messageId} - ${message.notification?.title}');
+}
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService.instance;
@@ -51,6 +64,9 @@ class NotificationService {
   static final NotificationService instance = NotificationService._internal();
   NotificationService._internal();
 
+  bool _isFirebaseInitialized = false;
+  String? _fcmToken;
+
   final Set<String> _subscribedTopics = {
     'pe_geral',
     'pe_promocoes',
@@ -59,23 +75,107 @@ class NotificationService {
   };
 
   Set<String> get subscribedTopics => Set.unmodifiable(_subscribedTopics);
+  bool get isFirebaseInitialized => _isFirebaseInitialized;
+  String? get fcmToken => _fcmToken;
 
-  /// Subscribe to FCM Topic
+  /// Initialize Native Firebase Cloud Messaging
+  Future<void> initialize({
+    String uf = 'PE',
+    void Function(AppNotificationModel)? onNotificationReceived,
+  }) async {
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp();
+      }
+      _isFirebaseInitialized = true;
+
+      // Register background message handler
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+      // Request notification permissions
+      final settings = await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+      debugPrint('🔔 [FCM] Authorization status: ${settings.authorizationStatus}');
+
+      // Auto-subscribe to regional and global topics for this state flavor
+      final stateSlug = uf.toLowerCase().trim();
+      await subscribeToTopic('${stateSlug}_geral');
+      await subscribeToTopic('${stateSlug}_promocoes');
+      await subscribeToTopic('${stateSlug}_eventos');
+      await subscribeToTopic('global_ofertas');
+
+      // Listen to foreground notifications
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('🔔 [FCM Foreground] Received: ${message.notification?.title}');
+        final model = _convertRemoteMessage(message);
+        if (onNotificationReceived != null) {
+          onNotificationReceived(model);
+        }
+      });
+
+      // Retrieve device token for debug/telemetry
+      _fcmToken = await FirebaseMessaging.instance.getToken();
+      debugPrint('🔔 [FCM] Device Token: $_fcmToken');
+    } catch (e) {
+      debugPrint('ℹ️ [FCM] Running in fallback/offline mode (Firebase not available or test environment): $e');
+    }
+  }
+
+  /// Subscribe to FCM Topic with Slugs
   Future<void> subscribeToTopic(String topic) async {
     _subscribedTopics.add(topic);
     debugPrint('🔔 [FCM] Subscribed to topic: /topics/$topic');
+
+    if (_isFirebaseInitialized) {
+      try {
+        await FirebaseMessaging.instance.subscribeToTopic(topic);
+      } catch (e) {
+        debugPrint('⚠️ [FCM] Could not subscribe to Firebase topic $topic: $e');
+      }
+    }
   }
 
   /// Unsubscribe from FCM Topic
   Future<void> unsubscribeFromTopic(String topic) async {
     _subscribedTopics.remove(topic);
     debugPrint('🔕 [FCM] Unsubscribed from topic: /topics/$topic');
+
+    if (_isFirebaseInitialized) {
+      try {
+        await FirebaseMessaging.instance.unsubscribeFromTopic(topic);
+      } catch (e) {
+        debugPrint('⚠️ [FCM] Could not unsubscribe from Firebase topic $topic: $e');
+      }
+    }
   }
 
-  /// Subscribe user to a specific city of interest
+  /// Subscribe user to a specific city of interest with slug format
   Future<void> subscribeToCity(String uf, String citySlug) async {
     final topic = '${uf.toLowerCase()}_${citySlug.toLowerCase()}';
     await subscribeToTopic(topic);
+  }
+
+  /// Convert incoming RemoteMessage to AppNotificationModel
+  AppNotificationModel _convertRemoteMessage(RemoteMessage message) {
+    final data = message.data;
+    return AppNotificationModel(
+      id: message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      title: message.notification?.title ?? data['titulo'] ?? 'Nova Notificação',
+      body: message.notification?.body ?? data['mensagem'] ?? '',
+      imageUrl: message.notification?.android?.imageUrl ?? data['imagem_url'],
+      topic: message.from ?? data['topico'] ?? 'global_ofertas',
+      actionType: data['action_type'] ?? 'open_city',
+      actionValue: data['action_value'] ?? 'recife',
+      timestamp: DateTime.now(),
+      isRead: false,
+    );
   }
 
   /// Handle Notification Tap / Deep Linking
@@ -132,7 +232,7 @@ class NotificationService {
         id: 'notif_3',
         title: '⛵ Passeio de Catamarã com 15% OFF',
         body: 'Reserve o tour pelas pontes históricas do Recife Antigo com desconto exclusivo no app.',
-        imageUrl: 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?auto=format&fit=crop&w=800&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1667314200608-9823df705cc2?auto=format&fit=crop&w=800&q=80',
         topic: 'pe_promocoes',
         actionType: 'open_url',
         actionValue: 'https://catamarantours.com.br?ref=onetour_pe',

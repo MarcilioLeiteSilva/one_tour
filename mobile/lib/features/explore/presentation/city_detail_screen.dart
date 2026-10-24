@@ -7,6 +7,9 @@ import '../data/mock_pe_data.dart';
 import '../../trip_planner/presentation/trip_wizard_modal.dart';
 import '../../house_ads/presentation/house_ad_top_card.dart';
 import '../../house_ads/services/house_ads_service.dart';
+import '../../trip_planner/services/local_db_service.dart';
+import '../../trip_planner/presentation/trip_planner_controller.dart';
+import '../../social/services/social_service.dart';
 
 class CityDetailScreen extends ConsumerStatefulWidget {
   final String cityId;
@@ -20,34 +23,52 @@ class CityDetailScreen extends ConsumerStatefulWidget {
 class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
   bool _isDownloading = false;
   int _downloadProgress = 0;
+  bool _isDownloaded = false;
+  List<AttractionModel> _attractions = [];
 
-  void _startDownload() {
+  @override
+  void initState() {
+    super.initState();
+    _loadCityData();
+  }
+
+  Future<void> _loadCityData() async {
+    final isDl = await LocalDbService.instance.isCityDownloaded(widget.cityId);
+    final atts = await MockPeData.getAttractionsForCity(widget.cityId);
+    if (mounted) {
+      setState(() {
+        _isDownloaded = isDl;
+        _attractions = atts;
+      });
+    }
+  }
+
+  Future<void> _startDownload() async {
     setState(() {
       _isDownloading = true;
       _downloadProgress = 0;
     });
 
-    // Simulação visual de download de pacote offline
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!mounted) return false;
+    for (int p = 20; p <= 100; p += 20) {
+      await Future.delayed(const Duration(milliseconds: 150));
+      if (!mounted) return;
+      setState(() => _downloadProgress = p);
+    }
+
+    await LocalDbService.instance.markCityDownloaded(widget.cityId);
+
+    if (mounted) {
       setState(() {
-        _downloadProgress += 20;
+        _isDownloading = false;
+        _isDownloaded = true;
       });
-      return _downloadProgress < 100;
-    }).then((_) {
-      if (mounted) {
-        setState(() {
-          _isDownloading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Colors.green,
-            content: Text('✓ Pacote offline da cidade baixado com sucesso!'),
-          ),
-        );
-      }
-    });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text('✓ Pacote offline da cidade baixado e salvo no SQLite com sucesso!'),
+        ),
+      );
+    }
   }
 
   @override
@@ -62,9 +83,9 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
       orElse: () => MockPeData.cities.first,
     );
 
-    final cityAttractions = MockPeData.topAttractions
-        .where((a) => a.cityId == city.id)
-        .toList();
+    final cityAttractions = _attractions.isNotEmpty
+        ? _attractions
+        : MockPeData.topAttractions.where((a) => a.cityId == city.id).toList();
 
     return Scaffold(
       body: Stack(
@@ -130,12 +151,12 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
                         decoration: BoxDecoration(
                           color: _isDownloading
                               ? Colors.amber.withOpacity(0.12)
-                              : (city.isDownloaded || _downloadProgress == 100
+                              : (_isDownloaded || _downloadProgress == 100
                                   ? Colors.green.withOpacity(0.1)
                                   : config.primaryColor.withOpacity(0.08)),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: city.isDownloaded || _downloadProgress == 100
+                            color: _isDownloaded || _downloadProgress == 100
                                 ? Colors.green.shade400
                                 : config.primaryColor.withOpacity(0.2),
                           ),
@@ -143,43 +164,52 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  city.isDownloaded || _downloadProgress == 100
-                                      ? Icons.check_circle_rounded
-                                      : Icons.offline_pin_outlined,
-                                  color: city.isDownloaded || _downloadProgress == 100
-                                      ? Colors.green.shade600
-                                      : config.primaryColor,
-                                ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      city.isDownloaded || _downloadProgress == 100
-                                          ? l10n.offlineAvailable
-                                          : (_isDownloading
-                                              ? l10n.downloading(_downloadProgress)
-                                              : l10n.downloadGuide(city.packageSize)),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                        color: city.isDownloaded || _downloadProgress == 100
-                                            ? Colors.green.shade700
-                                            : null,
-                                      ),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _isDownloaded || _downloadProgress == 100
+                                        ? Icons.check_circle_rounded
+                                        : Icons.offline_pin_outlined,
+                                    color: _isDownloaded || _downloadProgress == 100
+                                        ? Colors.green.shade600
+                                        : config.primaryColor,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _isDownloaded || _downloadProgress == 100
+                                              ? l10n.offlineAvailable
+                                              : (_isDownloading
+                                                  ? l10n.downloading(_downloadProgress)
+                                                  : l10n.downloadGuide(city.packageSize)),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: _isDownloaded || _downloadProgress == 100
+                                                ? Colors.green.shade700
+                                                : null,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          'Mapas vetoriais e dados 100% offline',
+                                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      'Mapas vetoriais e dados 100% offline',
-                                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                ],
+                              ),
                             ),
-                            if (!city.isDownloaded && _downloadProgress < 100)
+                            const SizedBox(width: 8),
+                            if (!_isDownloaded && _downloadProgress < 100)
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -310,79 +340,344 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
   }
 }
 
-class _CityAttractionItem extends StatelessWidget {
+class _CityAttractionItem extends ConsumerWidget {
   final AttractionModel att;
 
   const _CityAttractionItem({required this.att});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              att.imageUrl,
-              width: 75,
-              height: 75,
-              fit: BoxFit.cover,
-            ),
+  void _showDetailModal(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final config = ref.read(flavorConfigProvider);
+    final isLiked = ref.watch(userLikesProvider).contains(att.id);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          const SizedBox(width: 14),
-          Expanded(
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.network(
+                    att.imageUrl,
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 180,
+                      color: Colors.grey.shade300,
+                      child: const Icon(Icons.place, size: 48, color: Colors.grey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.amber.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '#${att.rankPosition} Ranking',
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                        '#${att.rankPosition} no Estado • ${att.cityName}',
+                        style: const TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
                       ),
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.star, size: 14, color: Colors.amber),
-                        const SizedBox(width: 2),
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
                         Text(
-                          att.rating.toString(),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          '${att.rating} (${att.reviewsCount})',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Text(
                   att.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  '${att.durationMinutes} min • ${att.category}',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                  '${att.category} • Duração sugerida: ${att.durationMinutes} min',
+                  style: TextStyle(color: config.primaryColor, fontWeight: FontWeight.w600, fontSize: 12),
                 ),
+                const SizedBox(height: 12),
+                Text(
+                  att.description,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
+                    const SizedBox(width: 4),
+                    Text(
+                      'GPS: ${att.lat.toStringAsFixed(4)}, ${att.lon.toStringAsFixed(4)}',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        icon: Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.redAccent,
+                        ),
+                        label: Text(isLiked ? 'Salvo' : 'Salvar'),
+                        onPressed: () {
+                          ref.read(userLikesProvider.notifier).toggleLike(att.id);
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(isLiked ? 'Removido dos salvos' : 'Adicionado aos seus favoritos offline!'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: config.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        icon: const Icon(Icons.star_rate_rounded, color: Colors.amber),
+                        label: const Text('Avaliar'),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showReviewDialog(context, att);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, color: Colors.grey),
-        ],
+        );
+      },
+    );
+  }
+
+  void _showReviewDialog(BuildContext context, AttractionModel att) {
+    double selectedRating = 5.0;
+    final commentCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dlgCtx) {
+        return StatefulBuilder(
+          builder: (context, setDlgState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                  const Icon(Icons.rate_review_outlined, color: Colors.amber),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Avaliar ${att.name}',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Como foi sua experiência neste local?'),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      final star = index + 1;
+                      return IconButton(
+                        icon: Icon(
+                          star <= selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
+                          color: Colors.amber,
+                          size: 32,
+                        ),
+                        onPressed: () => setDlgState(() => selectedRating = star.toDouble()),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: commentCtrl,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Escreva seu comentário ou dica para outros viajantes...',
+                      hintStyle: const TextStyle(fontSize: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dlgCtx),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await LocalDbService.instance.submitReview(
+                      att.id,
+                      selectedRating,
+                      comment: commentCtrl.text.trim(),
+                    );
+                    await SocialService.instance.submitReview(
+                      att.id,
+                      selectedRating,
+                      citySlug: att.cityId,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(dlgCtx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: Colors.green,
+                          content: Text('✓ Sua avaliação foi registrada e salva com sucesso!'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Publicar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => _showDetailModal(context, ref),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                att.imageUrl,
+                width: 75,
+                height: 75,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 75,
+                  height: 75,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.place),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '#${att.rankPosition} Ranking',
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 14, color: Colors.amber),
+                          const SizedBox(width: 2),
+                          Text(
+                            att.rating.toString(),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    att.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${att.durationMinutes} min • ${att.category}',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }
 }
+

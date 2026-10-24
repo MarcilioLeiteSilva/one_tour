@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import '../../../core/config/app_config.dart';
+import '../../social/services/social_service.dart';
 import '../domain/house_ad_model.dart';
 
 final houseAdsServiceProvider = Provider<HouseAdsService>((ref) {
@@ -44,6 +48,8 @@ class HouseAdsService {
   static final HouseAdsService instance = HouseAdsService._internal();
   HouseAdsService._internal();
 
+  final http.Client _client = http.Client();
+
   // Curated offline-first catalog of house ads and cross-promotions
   final List<HouseAdModel> _offlineCatalog = const [
     // 1. Cross-promotion: Tour Paraíba
@@ -79,7 +85,7 @@ class HouseAdsService {
       title: 'Pousada Pé na Areia • Porto de Galinhas',
       subtitle: 'Piscinas naturais na porta do quarto, café da manhã regional e transfer.',
       tag: 'ONDE SE HOSPEDAR',
-      imageUrl: 'https://images.unsplash.com/photo-1582650625119-3a31f8418b7d?auto=format&fit=crop&w=800&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
       actionLabel: 'Ver Tarifas Especiais',
       targetUrl: 'https://tabapitanga.com.br?ref=onetour_pe',
       targetUf: 'PE',
@@ -121,6 +127,49 @@ class HouseAdsService {
   }) async {
     final normalizedUf = uf.toUpperCase();
 
+    // 1. Try fetching live campaigns from PocketBase VPS
+    try {
+      final url = Uri.parse(
+        '$kBackendBaseUrl/api/collections/campanhas_ads/records?filter=(ativo=true&&uf_alvo="$normalizedUf")',
+      );
+      final response = await _client.get(url).timeout(const Duration(seconds: 3));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        final items = data['items'] as List<dynamic>? ?? [];
+
+        if (items.isNotEmpty) {
+          final liveAds = items.map((item) {
+            final m = item as Map<String, dynamic>;
+            final pos = m['posicao'] ?? 'home_card';
+            return HouseAdModel(
+              id: m['id'] ?? 'ad_pb',
+              type: 'direct_sponsor',
+              title: m['titulo'] ?? 'Parceiro One Tour',
+              subtitle: 'Experiência exclusiva para viajantes em Pernambuco.',
+              tag: 'PATROCINADOR OFICIAL',
+              imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
+              actionLabel: 'Saiba Mais',
+              targetUrl: m['link_destino'] ?? 'https://onetour.app',
+              targetUf: m['uf_alvo'] ?? normalizedUf,
+              position: pos,
+            );
+          }).where((ad) {
+            if (position != null && ad.position != position) return false;
+            return true;
+          }).toList();
+
+          if (liveAds.isNotEmpty) {
+            debugPrint('🌐 [HouseAdsService] Carregadas ${liveAds.length} campanhas ativas da VPS!');
+            return liveAds;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('ℹ️ [HouseAdsService] Usando catálogo offline de anúncios ($e)');
+    }
+
+    // 2. Fallback to curated offline catalog
     final matches = _offlineCatalog.where((ad) {
       if (ad.targetUf != normalizedUf) return false;
       if (position != null && ad.position != position) return false;
@@ -133,10 +182,23 @@ class HouseAdsService {
   /// Track impression (offline-first telemetry)
   Future<void> trackImpression(HouseAdModel ad, {String? city}) async {
     debugPrint('📊 [Telemetry] Impression recorded for Ad: ${ad.id} (pos: ${ad.position})');
+    await SocialService.instance.recordAdImpression(
+      ad.id,
+      ad.position,
+      citySlug: city,
+      uf: ad.targetUf,
+    );
   }
 
   /// Track click (offline-first telemetry)
   Future<void> trackClick(HouseAdModel ad, {String? city}) async {
     debugPrint('🖱️ [Telemetry] Click recorded for Ad: ${ad.id} (url: ${ad.targetUrl})');
+    await SocialService.instance.recordAdClick(
+      ad.id,
+      ad.position,
+      citySlug: city,
+      uf: ad.targetUf,
+    );
   }
 }
+

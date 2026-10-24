@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/app_config.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/trip_request.dart';
+import '../services/local_db_service.dart';
 import 'trip_planner_controller.dart';
 import 'trip_wizard_modal.dart';
 
@@ -106,7 +107,63 @@ class TripPlannerScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 28),
-          Text('Roteiros Recentes & Sugestões', style: theme.textTheme.titleMedium),
+
+          // Seção: Sugestões dos Especialistas
+          Text('Sugestões Prontas dos Especialistas', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildPresetTripCard(
+                  context: context,
+                  ref: ref,
+                  theme: theme,
+                  config: config,
+                  title: 'Recife Cultural & Pontes',
+                  city: 'Recife',
+                  days: 3,
+                  imageUrl: 'https://images.unsplash.com/photo-1577039508937-99c3b639ba77?auto=format&fit=crop&w=800&q=80',
+                ),
+                const SizedBox(width: 12),
+                _buildPresetTripCard(
+                  context: context,
+                  ref: ref,
+                  theme: theme,
+                  config: config,
+                  title: 'Porto de Galinhas & Jangadas',
+                  city: 'Porto de Galinhas',
+                  days: 2,
+                  imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+                ),
+                const SizedBox(width: 12),
+                _buildPresetTripCard(
+                  context: context,
+                  ref: ref,
+                  theme: theme,
+                  config: config,
+                  title: 'Olinda Barroca & Ladeiras',
+                  city: 'Olinda',
+                  days: 1,
+                  imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
+                ),
+                const SizedBox(width: 12),
+                _buildPresetTripCard(
+                  context: context,
+                  ref: ref,
+                  theme: theme,
+                  config: config,
+                  title: 'Noronha Paraíso Ecológico',
+                  city: 'Fernando de Noronha',
+                  days: 2,
+                  imageUrl: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80',
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+          Text('Meus Roteiros Salvos (Offline)', style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
 
           savedTripsAsync.when(
@@ -119,76 +176,23 @@ class TripPlannerScreen extends ConsumerWidget {
             error: (err, _) => Center(child: Text('Erro ao carregar roteiros: $err')),
             data: (trips) {
               if (trips.isEmpty) {
-                // Sugestão padrão pronta
-                return GestureDetector(
-                  onTap: () async {
-                    final plan = await ref
-                        .read(currentTripPlanProvider.notifier)
-                        .generateTrip(const TripRequest(cityName: 'Recife', days: 3));
-                    if (context.mounted && plan != null) {
-                      context.push('/roteiro/${plan.id}');
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.cardColor,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.grey.withOpacity(0.15)),
-                    ),
-                    child: Row(
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                  ),
+                  child: Center(
+                    child: Column(
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?auto=format&fit=crop&w=800&q=80',
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: 70,
-                              height: 70,
-                              color: Colors.grey.shade300,
-                              child: const Icon(Icons.photo),
-                            ),
-                          ),
+                        Icon(Icons.route_outlined, size: 40, color: Colors.grey.shade400),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Nenhum roteiro salvo ainda.\nToque em "Montar Novo Roteiro" ou escolha uma sugestão acima!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                         ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Recife Histórico e Olinda',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '3 dias • Sugestão dos Especialistas',
-                                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  const Icon(Icons.check_circle, size: 12, color: Colors.green),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Pronto para uso offline',
-                                    style: TextStyle(
-                                      color: Colors.green.shade700,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.chevron_right, color: Colors.grey),
                       ],
                     ),
                   ),
@@ -210,7 +214,7 @@ class TripPlannerScreen extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: theme.cardColor,
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
                         ),
                         child: Row(
                           children: [
@@ -218,7 +222,7 @@ class TripPlannerScreen extends ConsumerWidget {
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: config.primaryColor.withOpacity(0.12),
+                                color: config.primaryColor.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(Icons.map_rounded, color: config.primaryColor),
@@ -246,6 +250,30 @@ class TripPlannerScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 20),
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Excluir Roteiro?'),
+                                    content: Text('Deseja excluir "${trip.title}" do armazenamento offline?'),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        child: const Text('Excluir'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirm == true) {
+                                  await LocalDbService.instance.deleteSavedTrip(trip.id);
+                                  ref.invalidate(savedTripsProvider);
+                                }
+                              },
+                            ),
                             const Icon(Icons.chevron_right, color: Colors.grey),
                           ],
                         ),
@@ -257,6 +285,79 @@ class TripPlannerScreen extends ConsumerWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPresetTripCard({
+    required BuildContext context,
+    required WidgetRef ref,
+    required ThemeData theme,
+    required dynamic config,
+    required String title,
+    required String city,
+    required int days,
+    required String imageUrl,
+  }) {
+    return GestureDetector(
+      onTap: () async {
+        final plan = await ref.read(currentTripPlanProvider.notifier).generateTrip(
+              TripRequest(cityName: city, days: days),
+            );
+        if (context.mounted && plan != null) {
+          context.push('/roteiro/${plan.id}');
+        }
+      },
+      child: Container(
+        width: 220,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                height: 110,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  height: 110,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.photo),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '$days ${days == 1 ? 'dia' : 'dias'} • Roteiro Inteligente',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.bolt, color: config.primaryColor, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  'Gerar com 1 toque',
+                  style: TextStyle(color: config.primaryColor, fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

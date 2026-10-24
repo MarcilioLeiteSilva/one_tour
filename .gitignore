@@ -9,6 +9,7 @@
 server/.env
 keys_firebase/
 *adminsdk*.json
+*google-services*.json
 
 # Bancos de Dados e Volumes Locais do Docker
 server/postgres/pgdata/

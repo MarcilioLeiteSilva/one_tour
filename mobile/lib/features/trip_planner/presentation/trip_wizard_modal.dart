@@ -16,11 +16,18 @@ class TripWizardModal extends ConsumerStatefulWidget {
 }
 
 class _TripWizardModalState extends ConsumerState<TripWizardModal> {
+  late String _selectedCity;
   int _selectedDays = 3;
   int _selectedPace = 1; // 0: Tranquilo, 1: Moderado, 2: Intenso
   int _selectedCompanion = 1; // 0: Solo, 1: Casal, 2: Família, 3: Amigos
 
   final Set<String> _selectedInterests = {'praias', 'cultura', 'gastronomia'};
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCity = widget.cityName.isNotEmpty ? widget.cityName : 'Recife';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +86,7 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
                         style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        'Roteiro inteligente para ${widget.cityName}',
+                        'Roteiro inteligente para $_selectedCity',
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                       ),
                     ],
@@ -91,6 +98,24 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
             const SizedBox(height: 20),
             const Divider(height: 1),
             const SizedBox(height: 16),
+
+            // Pergunta 0: Destino Polo
+            Text('Escolha o Destino', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildCityChip('Recife', Icons.location_city, config),
+                  _buildCityChip('Porto de Galinhas', Icons.beach_access, config),
+                  _buildCityChip('Olinda', Icons.account_balance, config),
+                  _buildCityChip('Praia dos Carneiros', Icons.sailing, config),
+                  _buildCityChip('Fernando de Noronha', Icons.eco, config),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
 
             // Pergunta 1: Quantos dias?
             Text(l10n.howManyDays, style: theme.textTheme.titleMedium),
@@ -295,7 +320,7 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
                               : TripCompanion.friends));
 
                   final request = TripRequest(
-                    cityName: widget.cityName,
+                    cityName: _selectedCity,
                     days: _selectedDays,
                     pace: pace,
                     companion: companion,
@@ -312,6 +337,28 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCityChip(String city, IconData icon, dynamic config) {
+    final isSelected = _selectedCity.toLowerCase().trim() == city.toLowerCase().trim();
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        selected: isSelected,
+        avatar: Icon(icon, size: 14, color: isSelected ? Colors.white : config.primaryColor),
+        label: Text(
+          city,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Colors.white : null,
+          ),
+        ),
+        selectedColor: config.primaryColor,
+        backgroundColor: Theme.of(context).cardColor,
+        onSelected: (_) => setState(() => _selectedCity = city),
       ),
     );
   }

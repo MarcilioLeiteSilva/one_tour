@@ -3,13 +3,49 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/app_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/explore/presentation/explore_controller.dart';
+import 'features/notifications/services/notification_service.dart';
+import 'features/social/services/social_service.dart';
 import 'l10n/app_localizations.dart';
 
-class OneTourApp extends ConsumerWidget {
+class OneTourApp extends ConsumerStatefulWidget {
   const OneTourApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OneTourApp> createState() => _OneTourAppState();
+}
+
+class _OneTourAppState extends ConsumerState<OneTourApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final config = ref.read(flavorConfigProvider);
+
+      // 1. Push Notifications
+      NotificationService.instance.initialize(
+        uf: config.uf,
+        onNotificationReceived: (notif) {
+          ref.read(notificationsListProvider.notifier).addNotification(notif);
+        },
+      );
+
+      // 2. Social & Telemetry Engine (offline-first sync com Postgres)
+      SocialService.instance.onStatsUpdated = () {
+        ref.invalidate(curatedAttractionsProvider);
+      };
+      SocialService.instance.start(uf: config.uf);
+    });
+  }
+
+  @override
+  void dispose() {
+    SocialService.instance.stop();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final config = ref.watch(flavorConfigProvider);
     final themeMode = ref.watch(themeModeProvider);

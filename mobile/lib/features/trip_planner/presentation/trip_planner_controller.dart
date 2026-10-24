@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../social/services/social_service.dart';
 import '../domain/itinerary_models.dart';
 import '../domain/trip_request.dart';
 import '../services/local_db_service.dart';
@@ -101,6 +102,7 @@ class UserLikesNotifier extends StateNotifier<Set<String>> {
     } else {
       state = state.where((id) => id != placeId).toSet();
     }
+    await SocialService.instance.recordLike(placeId, liked: isLikedNow);
     return isLikedNow;
   }
 

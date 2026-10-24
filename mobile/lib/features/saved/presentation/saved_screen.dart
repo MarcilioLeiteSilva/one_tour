@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/app_config.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../explore/data/mock_pe_data.dart';
+import '../../explore/presentation/explore_controller.dart';
 import '../../trip_planner/presentation/trip_planner_controller.dart';
 
 class SavedScreen extends ConsumerWidget {
@@ -136,87 +137,76 @@ class SavedScreen extends ConsumerWidget {
               ),
 
             // Aba 2: Pacotes Offline Baixados
-            ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.green.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Recife e Região Metropolitana',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                            Text(
-                              'Pacote pack.sqlite + map.pmtiles (14 MB)',
-                              style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                            ),
-                          ],
+            Consumer(
+              builder: (context, ref, _) {
+                final downloadedAsync = ref.watch(downloadedPacksProvider);
+                final downloadedSet = downloadedAsync.value ?? {'recife'};
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: MockPeData.cities.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final city = MockPeData.cities[index];
+                    final isDownloaded = downloadedSet.contains(city.id);
+
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDownloaded ? Colors.green.withOpacity(0.08) : theme.cardColor,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDownloaded ? Colors.green.withOpacity(0.3) : Colors.grey.withOpacity(0.15),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Pacote integrado do sistema. Mantido para navegação offline.'),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isDownloaded ? Icons.check_circle_rounded : Icons.download_for_offline_outlined,
+                            color: isDownloaded ? Colors.green : config.primaryColor,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  city.name,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                                Text(
+                                  isDownloaded
+                                      ? 'Disponível offline (${city.packageSize})'
+                                      : 'Tamanho estimado: ${city.packageSize}',
+                                  style: TextStyle(
+                                    color: isDownloaded ? Colors.green.shade700 : Colors.grey.shade600,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        child: const Text('Detalhes', style: TextStyle(color: Colors.green, fontSize: 12)),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.withOpacity(0.15)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.download_for_offline_outlined, color: config.primaryColor, size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Porto de Galinhas',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          if (!isDownloaded)
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: config.primaryColor,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              onPressed: () => context.push('/cidade/${city.id}'),
+                              child: const Text('Baixar'),
+                            )
+                          else
+                            TextButton(
+                              onPressed: () => context.push('/cidade/${city.id}'),
+                              child: const Text('Abrir', style: TextStyle(color: Colors.green, fontSize: 12)),
                             ),
-                            Text(
-                              'Tamanho estimado: 9 MB',
-                              style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                            ),
-                          ],
-                        ),
+                        ],
                       ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: config.primaryColor,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        onPressed: () => context.push('/cidade/porto_de_galinhas'),
-                        child: const Text('Baixar'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),

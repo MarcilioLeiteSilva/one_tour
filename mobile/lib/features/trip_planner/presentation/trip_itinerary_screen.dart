@@ -287,7 +287,7 @@ class _TimelineStop extends ConsumerWidget {
                   child: Image.network(
                     place.imageUrl.isNotEmpty
                         ? place.imageUrl
-                        : 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?auto=format&fit=crop&w=800&q=80',
+                        : 'https://images.unsplash.com/photo-1577039508937-99c3b639ba77?auto=format&fit=crop&w=800&q=80',
                     width: 72,
                     height: 72,
                     fit: BoxFit.cover,
