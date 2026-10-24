@@ -1,40 +1,51 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient, QueryResult } from 'pg';
 import { config } from './config.js';
 
-let pool: Pool | null = null;
-let isConnected = false;
+export const pool = new Pool(
+  config.db.url
+    ? { connectionString: config.db.url, max: 10, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000 }
+    : {
+        host: config.db.host,
+        port: config.db.port,
+        database: config.db.database,
+        user: config.db.user,
+        password: config.db.password,
+        ssl: config.db.ssl ? { rejectUnauthorized: false } : undefined,
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      },
+);
 
-try {
-  pool = new Pool({
-    connectionString: config.databaseUrl,
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-  });
+pool.on('error', (err) => {
+  console.error('PostgreSQL unexpected pool error:', err.message);
+});
 
-  pool.on('error', (err) => {
-    console.error('PostgreSQL unexpected pool error:', err.message);
-  });
-} catch (e) {
-  console.warn('PostgreSQL initialization deferred:', e);
+/** Executa uma consulta. Erros são propagados (nada é mascarado). */
+export async function query(text: string, params?: any[]): Promise<QueryResult<any>> {
+  return pool.query(text, params);
 }
 
-export async function query(text: string, params?: any[]) {
-  if (!pool) return { rows: [] };
+/** Executa um bloco dentro de uma transação. */
+export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  const client = await pool.connect();
   try {
-    return await pool.query(text, params);
-  } catch (err: any) {
-    console.warn(`Postgres query failed: ${err.message}. Proceeding with memory fallback.`);
-    return { rows: [] };
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    throw err;
+  } finally {
+    client.release();
   }
 }
 
 export async function checkDbHealth(): Promise<boolean> {
-  if (!pool) return false;
   try {
     const res = await pool.query('SELECT 1');
-    isConnected = res.rowCount === 1;
-    return isConnected;
+    return res.rowCount === 1;
   } catch {
     return false;
   }
