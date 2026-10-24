@@ -27,7 +27,7 @@ export const config = {
     ssl: process.env.PGSSL === 'true',
   },
 
-  pocketbaseUrl: process.env.POCKETBASE_URL || 'https://onetour-backend-onetour.gtalg3.easypanel.host',
+  pocketbaseUrl: process.env.POCKETBASE_URL || 'https://onetour-pocketbase-estados.gtalg3.easypanel.host',
 
   // Origens autorizadas a chamar a API pelo navegador (admin web app).
   allowedOrigins: [

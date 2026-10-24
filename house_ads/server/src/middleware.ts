@@ -53,17 +53,28 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
   }
 
   try {
-    const pbRes = await fetch(`${config.pocketbaseUrl}/api/admins/auth-refresh`, {
+    // Tenta primeiro no PocketBase v0.23+ (_superusers)
+    let pbRes = await fetch(`${config.pocketbaseUrl}/api/collections/_superusers/auth-refresh`, {
       method: 'POST',
       headers: { Authorization: token },
       signal: AbortSignal.timeout(5000),
     });
+
+    // Fallback para PocketBase v0.22 (admins) caso retorne 404
+    if (pbRes.status === 404) {
+      pbRes = await fetch(`${config.pocketbaseUrl}/api/admins/auth-refresh`, {
+        method: 'POST',
+        headers: { Authorization: token },
+        signal: AbortSignal.timeout(5000),
+      });
+    }
+
     if (!pbRes.ok) {
       res.status(401).json({ error: 'Invalid token' });
       return;
     }
     const body: any = await pbRes.json();
-    const email: string = body?.admin?.email || 'admin';
+    const email: string = body?.record?.email || body?.admin?.email || 'admin';
     tokenCache.set(token, { email, expiresAt: Date.now() + CACHE_TTL_MS });
     (req as any).adminEmail = email;
     next();

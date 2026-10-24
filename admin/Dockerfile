@@ -6,7 +6,7 @@ COPY package*.json ./
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 ARG VITE_API_BASE_URL=https://onetour-api-onetour.gtalg3.easypanel.host
-ARG VITE_POCKETBASE_URL=https://onetour-backend-onetour.gtalg3.easypanel.host
+ARG VITE_POCKETBASE_URL=https://onetour-pocketbase-estados.gtalg3.easypanel.host
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_POCKETBASE_URL=$VITE_POCKETBASE_URL
 

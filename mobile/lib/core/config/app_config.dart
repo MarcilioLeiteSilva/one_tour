@@ -5,7 +5,7 @@ import 'app_flavor.dart';
 /// PocketBase (CMS/content). Override with --dart-define=BACKEND_BASE_URL=...
 const String kBackendBaseUrl = String.fromEnvironment(
   'BACKEND_BASE_URL',
-  defaultValue: 'https://onetour-backend-onetour.gtalg3.easypanel.host',
+  defaultValue: 'https://onetour-pocketbase-estados.gtalg3.easypanel.host',
 );
 
 /// One Tour API (votes, telemetry, rankings). Override with --dart-define=API_BASE_URL=...

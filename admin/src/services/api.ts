@@ -10,7 +10,7 @@ import {
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'https://onetour-api-onetour.gtalg3.easypanel.host';
 export const PB_BASE_URL =
-  import.meta.env.VITE_POCKETBASE_URL || 'https://onetour-backend-onetour.gtalg3.easypanel.host';
+  import.meta.env.VITE_POCKETBASE_URL || 'https://onetour-pocketbase-estados.gtalg3.easypanel.host';
 
 const TOKEN_KEY = 'onetour_admin_token';
 const EMAIL_KEY = 'onetour_admin_email';
@@ -144,11 +144,21 @@ export async function fetchPlaceStats(uf: string = 'PE'): Promise<PlaceStatsItem
 // ---------------------------------------------------------------------------
 
 export async function loginAdmin(identity: string, password: string): Promise<string> {
-  const res = await fetch(`${PB_BASE_URL}/api/admins/auth-with-password`, {
+  // PocketBase v0.23+ autentica superusers na coleção _superusers
+  let res = await fetch(`${PB_BASE_URL}/api/collections/_superusers/auth-with-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identity, password }),
   });
+
+  // Fallback para PocketBase v0.22 (admins) caso retorne 404
+  if (res.status === 404) {
+    res = await fetch(`${PB_BASE_URL}/api/admins/auth-with-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity, password }),
+    });
+  }
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
@@ -157,7 +167,7 @@ export async function loginAdmin(identity: string, password: string): Promise<st
 
   const data = await res.json();
   const token = data.token;
-  const email = data.admin?.email || identity;
+  const email = data.record?.email || data.admin?.email || identity;
   setStoredAuth(token, email);
   return token;
 }

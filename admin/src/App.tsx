@@ -318,7 +318,7 @@ export const App: React.FC = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span>API: <code>https://onetour-api-onetour.gtalg3.easypanel.host</code></span>
-            <span>PB: <code>https://onetour-backend-onetour.gtalg3.easypanel.host</code></span>
+            <span>PB: <code>https://onetour-pocketbase-estados.gtalg3.easypanel.host</code></span>
           </div>
         </div>
       </footer>
