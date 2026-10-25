@@ -460,7 +460,9 @@ graph LR
 1. **Submissão na Google Play Store (App Piloto PE):**
    * Gerar o Android App Bundle (`.aab`) assinado via `flutter build appbundle --flavor pe --target lib/main_pe.dart`.
    * Realizar upload na Google Play Console sob a faixa de testes internos para o identificador `com.onetour.pe`.
-2. **Hospedagem dos Arquivos de Mapas Vetoriais (.pmtiles):**
-   * Fazer upload dos arquivos PMTiles gerados das cidades polo para o bucket S3 / MinIO ou CDN para downloads offline pelo app.
+2. **Hospedagem dos Arquivos de Mapas Vetoriais (.pmtiles) e Pacotes SQLite `[CONCLUÍDO] ✅`:**
+   * Script automatizado `server/scripts/sync_packs_to_minio.py` implementado para sincronização de 31 pacotes SQLite e contêineres PMTiles v3 com bucket público `onetour-packs` no MinIO e API.
+   * Endpoints de streaming `/api/v1/packs/catalog`, `/api/v1/packs/download/:slug` e `/api/v1/packs/maps/download/:slug` ativos com suporte nativo a HTTP Range Requests.
+   * `CityPackDownloadService` integrado no Flutter com download real, indicador de progresso, fallback resiliente offline e leitura dinâmica do SQLite local via `LocalDbService` validado (34/34 testes unitários passando).
 3. **Execução do Rollout da Onda 1 (Nordeste):**
    * Disparar a esteira Fastlane para compilar e empacotar os estados limítrofes (Alagoas `com.onetour.al`, Paraíba `com.onetour.pb` e Ceará `com.onetour.ce`), ativando a rede de anúncios cruzados (Cross-Promotion).

@@ -8,8 +8,10 @@ import '../../trip_planner/presentation/trip_wizard_modal.dart';
 import '../../house_ads/presentation/house_ad_top_card.dart';
 import '../../house_ads/services/house_ads_service.dart';
 import '../../trip_planner/services/local_db_service.dart';
+import '../../trip_planner/services/city_pack_download_service.dart';
 import '../../trip_planner/presentation/trip_planner_controller.dart';
 import '../../social/services/social_service.dart';
+import '../services/explore_repository.dart';
 import 'explore_controller.dart';
 
 class CityDetailScreen extends ConsumerStatefulWidget {
@@ -50,31 +52,59 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
       _downloadProgress = 0;
     });
 
-    for (int p = 20; p <= 100; p += 20) {
-      await Future.delayed(const Duration(milliseconds: 150));
-      if (!mounted) return;
-      setState(() => _downloadProgress = p);
-    }
+    final success = await CityPackDownloadService.instance.downloadCityPack(
+      widget.cityId,
+      onProgress: (percent) {
+        if (!mounted) return;
+        setState(() => _downloadProgress = percent);
+      },
+    );
 
-    await LocalDbService.instance.markCityDownloaded(widget.cityId);
     ref.invalidate(downloadedPacksProvider);
 
     if (mounted) {
       setState(() {
         _isDownloading = false;
-        _isDownloaded = true;
+        _isDownloaded = success;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.green,
-          content: Text('✓ Pacote offline da cidade baixado e salvo no SQLite com sucesso!'),
-        ),
-      );
+
+      if (success) {
+        // Recarrega as atrações para refletir os dados recém-baixados
+        final freshAtts = await ExploreRepository.instance.getAttractions(
+          uf: 'PE',
+          citySlug: widget.cityId,
+        );
+        if (mounted) {
+          setState(() => _attractions = freshAtts);
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.green,
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('✓ Pacote SQLite e Mapa offline prontos para uso!'),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.redAccent,
+            content: Text('Falha ao baixar pacote. Verifique sua conexão à internet.'),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _removeDownload() async {
-    await LocalDbService.instance.removeCityDownloaded(widget.cityId);
+    await CityPackDownloadService.instance.removeCityPack(widget.cityId);
     ref.invalidate(downloadedPacksProvider);
     if (mounted) {
       setState(() {

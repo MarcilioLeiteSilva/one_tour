@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart' as sql;
@@ -579,9 +580,29 @@ class LocalDbService {
   // CURATED POI CATALOG (OFFLINE PACK)
   // ==========================================
 
-  /// Returns places for city (from pack or bundled curated catalog)
+  /// Returns places for city (from downloaded SQLite pack or bundled catalog fallback)
   Future<List<Place>> getPlacesForCity(String citySlug) async {
     final slug = citySlug.toLowerCase().trim();
+
+    // 1. Tenta carregar os lugares diretamente do SQLite baixado
+    try {
+      final dbPath = await sql.getDatabasesPath();
+      final packFile = File(p.join(dbPath, 'pack_$slug.sqlite'));
+      if (await packFile.exists()) {
+        final packDb = await sql.openReadOnlyDatabase(packFile.path);
+        final rows = await packDb.query('place', orderBy: 'rank_posicao ASC');
+        await packDb.close();
+
+        if (rows.isNotEmpty) {
+          debugPrint('📂 [LocalDbService] Carregados ${rows.length} lugares reais do pack_$slug.sqlite!');
+          return rows.map((r) => Place.fromMap(r)).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('ℹ️ [LocalDbService] Falha ao ler pack_$slug.sqlite ($e). Usando catálogo padrão.');
+    }
+
+    // 2. Fallback de catálogo integrado em memória
     if (slug == 'porto_de_galinhas' || slug.contains('porto')) {
       return _portoPlaces;
     } else if (slug == 'carneiros' || slug.contains('carneiros')) {
@@ -592,6 +613,44 @@ class LocalDbService {
       return _olindaPlaces;
     }
     return _recifePlaces;
+  }
+
+  /// Consulta a matriz pré-calculada de distância e tempo de trajeto do SQLite pack
+  Future<TravelSegment?> getTravelSegment(String citySlug, String fromId, String toId) async {
+    final slug = citySlug.toLowerCase().trim();
+    try {
+      final dbPath = await sql.getDatabasesPath();
+      final packFile = File(p.join(dbPath, 'pack_$slug.sqlite'));
+      if (await packFile.exists()) {
+        final packDb = await sql.openReadOnlyDatabase(packFile.path);
+        final rows = await packDb.query(
+          'matrix',
+          where: 'from_id = ? AND to_id = ?',
+          whereArgs: [fromId, toId],
+          limit: 1,
+        );
+        await packDb.close();
+
+        if (rows.isNotEmpty) {
+          final dist = (rows.first['distance_meters'] as num?)?.toInt() ?? 0;
+          final walkSec = (rows.first['walk_seconds'] as num?)?.toInt() ?? 0;
+          final driveSec = (rows.first['drive_seconds'] as num?)?.toInt() ?? 0;
+          final isWalk = dist <= 1500;
+          final durationMin = isWalk
+              ? (walkSec / 60).ceil().clamp(1, 120)
+              : (driveSec / 60).ceil().clamp(2, 240);
+
+          return TravelSegment(
+            distanceMeters: dist,
+            durationMinutes: durationMin,
+            isWalk: isWalk,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('LocalDbService: Matriz pré-calculada não encontrada ($e)');
+    }
+    return null;
   }
 
   static const List<Place> _recifePlaces = [

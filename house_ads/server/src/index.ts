@@ -9,6 +9,7 @@ import { trackRouter } from './routes/track.js';
 import { telemetryRouter } from './routes/telemetry.js';
 import { rankingsRouter } from './routes/places.js';
 import { adminRouter } from './routes/admin.js';
+import { packsRouter } from './routes/packs.js';
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use('/api/v1/ads/track', trackRouter);
 app.use('/api/v1/ads', adsRouter);
 app.use('/api/v1/telemetry', telemetryRouter);
 app.use('/api/v1/places', rankingsRouter);
+app.use('/api/v1/packs', packsRouter);
 
 // Protegido (admin web, token do PocketBase)
 app.use('/api/v1/admin', adminRouter);

@@ -1,0 +1,846 @@
+{
+  "bucket": "onetour-packs",
+  "created_at": "2026-10-25T12:42:46.981069+00:00",
+  "total_packs": 31,
+  "total_sqlite_mb": 0.95,
+  "total_pmtiles_mb": 0.02,
+  "packs": [
+    {
+      "slug": "recife",
+      "name": "Recife & Olinda",
+      "state_uf": "PE",
+      "total_places": 15,
+      "bounds": [
+        -8.15,
+        -34.95,
+        -7.95,
+        -34.8
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_recife.sqlite",
+        "size_bytes": 73728,
+        "size_kb": 72.0,
+        "sha256": "ae526b8b1ed5e2e2fb1d8c962654bea033e19b8461970aafce24394f64342711",
+        "s3_key": "sqlite/pack_recife.sqlite"
+      },
+      "pmtiles": {
+        "filename": "recife.pmtiles",
+        "size_bytes": 797,
+        "size_kb": 0.8,
+        "sha256": "c916473def3d0ae1476f8b822988fead0c5b0f9e3126e2a1e10901be87cd6dd7",
+        "s3_key": "maps/recife.pmtiles"
+      }
+    },
+    {
+      "slug": "porto_de_galinhas",
+      "name": "Porto de Galinhas",
+      "state_uf": "PE",
+      "total_places": 10,
+      "bounds": [
+        -8.55,
+        -35.05,
+        -8.45,
+        -34.95
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_porto_de_galinhas.sqlite",
+        "size_bytes": 49152,
+        "size_kb": 48.0,
+        "sha256": "c84f02fbe59a2627ea550f9d542235c925006b44e5b322979d7d971ce70e1ae1",
+        "s3_key": "sqlite/pack_porto_de_galinhas.sqlite"
+      },
+      "pmtiles": {
+        "filename": "porto_de_galinhas.pmtiles",
+        "size_bytes": 799,
+        "size_kb": 0.8,
+        "sha256": "ea306539531c8f5571f2e678fbff08f73397ae8932da97e4ac50e09b1d52e651",
+        "s3_key": "maps/porto_de_galinhas.pmtiles"
+      }
+    },
+    {
+      "slug": "carneiros",
+      "name": "Praia dos Carneiros",
+      "state_uf": "PE",
+      "total_places": 8,
+      "bounds": [
+        -8.75,
+        -35.15,
+        -8.65,
+        -35.05
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_carneiros.sqlite",
+        "size_bytes": 40960,
+        "size_kb": 40.0,
+        "sha256": "4179e9f5c752ed19fb86162428785bbf30ba140b7c5d6e2c4501ed81fa6d001f",
+        "s3_key": "sqlite/pack_carneiros.sqlite"
+      },
+      "pmtiles": {
+        "filename": "carneiros.pmtiles",
+        "size_bytes": 817,
+        "size_kb": 0.8,
+        "sha256": "814e077b4408988142ece9bd19e157713156c3451640455b062f8b48f0d847f3",
+        "s3_key": "maps/carneiros.pmtiles"
+      }
+    },
+    {
+      "slug": "noronha",
+      "name": "Fernando de Noronha",
+      "state_uf": "PE",
+      "total_places": 10,
+      "bounds": [
+        -3.9,
+        -32.5,
+        -3.8,
+        -32.35
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_noronha.sqlite",
+        "size_bytes": 57344,
+        "size_kb": 56.0,
+        "sha256": "426c8770c64a243d5b2dbf95b04cfd212251ddfdf3ca80e726873cf294666b25",
+        "s3_key": "sqlite/pack_noronha.sqlite"
+      },
+      "pmtiles": {
+        "filename": "noronha.pmtiles",
+        "size_bytes": 817,
+        "size_kb": 0.8,
+        "sha256": "ed214722fde69b69963356e35db281fc0e85df500437e3cf1e9e4699e951d822",
+        "s3_key": "maps/noronha.pmtiles"
+      }
+    },
+    {
+      "slug": "pe",
+      "name": "Pernambuco (Estado)",
+      "state_uf": "PE",
+      "total_places": 43,
+      "bounds": [
+        -9.5,
+        -41.35,
+        -7.15,
+        -34.8
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_pe.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "9971760420bc360acae0df28cd20a72deadbf1dafa94af8acc66464fa32f1183",
+        "s3_key": "sqlite/pack_pe.sqlite"
+      },
+      "pmtiles": {
+        "filename": "pe.pmtiles",
+        "size_bytes": 805,
+        "size_kb": 0.8,
+        "sha256": "c3387377d8c3cbf02d3a5a93bcc38b392bb1ff3851b6af2dd3c89e84b8f20f13",
+        "s3_key": "maps/pe.pmtiles"
+      }
+    },
+    {
+      "slug": "sp",
+      "name": "São Paulo",
+      "state_uf": "SP",
+      "total_places": 6,
+      "bounds": [
+        -23.75,
+        -46.85,
+        -23.4,
+        -46.45
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_sp.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "7ece4da9eaafd7efb79fcf893ec46994541e165616bae2a814ac156a66b84bc7",
+        "s3_key": "sqlite/pack_sp.sqlite"
+      },
+      "pmtiles": {
+        "filename": "sp.pmtiles",
+        "size_bytes": 803,
+        "size_kb": 0.8,
+        "sha256": "cf05c49b1a89bb1f840a18213dd84c26058b4c8ba939205187c220a81b2a0537",
+        "s3_key": "maps/sp.pmtiles"
+      }
+    },
+    {
+      "slug": "rj",
+      "name": "Rio de Janeiro",
+      "state_uf": "RJ",
+      "total_places": 6,
+      "bounds": [
+        -23.05,
+        -43.75,
+        -22.75,
+        -43.1
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_rj.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "02349b6dc4271be4be2c73bf9325e5c4d1f7da66b2f0ff30db9b31754c4b4132",
+        "s3_key": "sqlite/pack_rj.sqlite"
+      },
+      "pmtiles": {
+        "filename": "rj.pmtiles",
+        "size_bytes": 797,
+        "size_kb": 0.8,
+        "sha256": "7821a6b84f3f14673118d72c7bd9fbeddd671f26db3cb67c80290b681b1e4f1e",
+        "s3_key": "maps/rj.pmtiles"
+      }
+    },
+    {
+      "slug": "ba",
+      "name": "Salvador",
+      "state_uf": "BA",
+      "total_places": 5,
+      "bounds": [
+        -13.05,
+        -38.55,
+        -12.85,
+        -38.35
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_ba.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "ba2bfca0222e522fd2d2e92b5181fbd15501b61d166c5ddaee4a9b2e38d9d0c2",
+        "s3_key": "sqlite/pack_ba.sqlite"
+      },
+      "pmtiles": {
+        "filename": "ba.pmtiles",
+        "size_bytes": 786,
+        "size_kb": 0.8,
+        "sha256": "aadb693935c8dbc56e26a3a0bed5a72614fccdbb96255ecc7f94ab785ba51c43",
+        "s3_key": "maps/ba.pmtiles"
+      }
+    },
+    {
+      "slug": "mg",
+      "name": "Belo Horizonte",
+      "state_uf": "MG",
+      "total_places": 4,
+      "bounds": [
+        -20.05,
+        -44.05,
+        -19.75,
+        -43.85
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_mg.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "6d3cf9a74b6b6b368e9492c47a9046782e6a96d2064f0efbca22c0cfa9aa8a32",
+        "s3_key": "sqlite/pack_mg.sqlite"
+      },
+      "pmtiles": {
+        "filename": "mg.pmtiles",
+        "size_bytes": 797,
+        "size_kb": 0.8,
+        "sha256": "412e4f925f225aed71e2c152768201454a4b3b063db0cc9f268549febdb1f5cb",
+        "s3_key": "maps/mg.pmtiles"
+      }
+    },
+    {
+      "slug": "ce",
+      "name": "Fortaleza",
+      "state_uf": "CE",
+      "total_places": 4,
+      "bounds": [
+        -3.88,
+        -38.65,
+        -3.68,
+        -38.45
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_ce.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "8b379c6f09b7568b469b288f47ac6a1d6e32904e31e77edeadebcdeb89686f45",
+        "s3_key": "sqlite/pack_ce.sqlite"
+      },
+      "pmtiles": {
+        "filename": "ce.pmtiles",
+        "size_bytes": 799,
+        "size_kb": 0.8,
+        "sha256": "d1e006fdeaad27ef5e216a129ffe8c26f3ef6a5aa27f65784a10e9453c632ccf",
+        "s3_key": "maps/ce.pmtiles"
+      }
+    },
+    {
+      "slug": "df",
+      "name": "Brasília",
+      "state_uf": "DF",
+      "total_places": 4,
+      "bounds": [
+        -16.05,
+        -48.15,
+        -15.65,
+        -47.75
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_df.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "3bcd8c3c1cf7b795c2b31e8bc40095da957a4317fb3e9ecaa314692ce2466bda",
+        "s3_key": "sqlite/pack_df.sqlite"
+      },
+      "pmtiles": {
+        "filename": "df.pmtiles",
+        "size_bytes": 801,
+        "size_kb": 0.8,
+        "sha256": "1cf9e9303cf9a222c590e548c44d1f6aaa3113940b408247974137b728784915",
+        "s3_key": "maps/df.pmtiles"
+      }
+    },
+    {
+      "slug": "al",
+      "name": "Maceió",
+      "state_uf": "AL",
+      "total_places": 5,
+      "bounds": [
+        -9.75,
+        -35.85,
+        -9.55,
+        -35.65
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_al.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "946259016d6221fa30e5d394d1a3482201c1da36ac8d145113478421f0f361c8",
+        "s3_key": "sqlite/pack_al.sqlite"
+      },
+      "pmtiles": {
+        "filename": "al.pmtiles",
+        "size_bytes": 781,
+        "size_kb": 0.8,
+        "sha256": "a4e33348e98e2e718c6417a8e206895542670b71b6b30ec0d8ec47e498fac530",
+        "s3_key": "maps/al.pmtiles"
+      }
+    },
+    {
+      "slug": "pb",
+      "name": "João Pessoa",
+      "state_uf": "PB",
+      "total_places": 5,
+      "bounds": [
+        -7.25,
+        -34.95,
+        -7.05,
+        -34.75
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_pb.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "cf2406ea7cb2d3b276ec042575958ed6f349bc193f7b05c3ce2c39aa48113d84",
+        "s3_key": "sqlite/pack_pb.sqlite"
+      },
+      "pmtiles": {
+        "filename": "pb.pmtiles",
+        "size_bytes": 791,
+        "size_kb": 0.8,
+        "sha256": "9d0e68ebb680290f29870222ccbf190ef7092f64ad61958710d55630a3380ccf",
+        "s3_key": "maps/pb.pmtiles"
+      }
+    },
+    {
+      "slug": "rn",
+      "name": "Natal",
+      "state_uf": "RN",
+      "total_places": 5,
+      "bounds": [
+        -5.9,
+        -35.3,
+        -5.7,
+        -35.15
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_rn.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "65843588ea6c835587f9d637f0181bc546a292c89d1c04903ffc6499a9b0ff86",
+        "s3_key": "sqlite/pack_rn.sqlite"
+      },
+      "pmtiles": {
+        "filename": "rn.pmtiles",
+        "size_bytes": 800,
+        "size_kb": 0.8,
+        "sha256": "b6631cb0c902d78c984df7b2c784f621469e276ed856b69736e10c27b92e2541",
+        "s3_key": "maps/rn.pmtiles"
+      }
+    },
+    {
+      "slug": "se",
+      "name": "Aracaju",
+      "state_uf": "SE",
+      "total_places": 4,
+      "bounds": [
+        -11.05,
+        -37.15,
+        -10.85,
+        -37.0
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_se.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "e3eb95e7fa0a991dfdc9d28ae9690d0bba8f8877cee83a6e3594cb2634bf1973",
+        "s3_key": "sqlite/pack_se.sqlite"
+      },
+      "pmtiles": {
+        "filename": "se.pmtiles",
+        "size_bytes": 784,
+        "size_kb": 0.8,
+        "sha256": "77e5b0248229fe247223203b1d28cb935b33c487b976796a75d7ab63049718bd",
+        "s3_key": "maps/se.pmtiles"
+      }
+    },
+    {
+      "slug": "ma",
+      "name": "São Luís",
+      "state_uf": "MA",
+      "total_places": 5,
+      "bounds": [
+        -2.65,
+        -44.35,
+        -2.45,
+        -44.15
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_ma.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "35b74cfe7b7d3d462aff4f91571d96f49af72b996171c596ba48f0a8763f65fa",
+        "s3_key": "sqlite/pack_ma.sqlite"
+      },
+      "pmtiles": {
+        "filename": "ma.pmtiles",
+        "size_bytes": 787,
+        "size_kb": 0.8,
+        "sha256": "38f34f34928acc360d830619597907c9addd69a7c60130cb5a7037bcfc0e0100",
+        "s3_key": "maps/ma.pmtiles"
+      }
+    },
+    {
+      "slug": "pi",
+      "name": "Teresina",
+      "state_uf": "PI",
+      "total_places": 4,
+      "bounds": [
+        -5.15,
+        -42.85,
+        -4.95,
+        -42.7
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_pi.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "60c5b2d1371acd520463c8bd4c57049a28b51664fbf32ae63b7b18433b32caba",
+        "s3_key": "sqlite/pack_pi.sqlite"
+      },
+      "pmtiles": {
+        "filename": "pi.pmtiles",
+        "size_bytes": 808,
+        "size_kb": 0.8,
+        "sha256": "12980bc9a5d6fa292f1777d48076a43a851655890f3413f996b01c371bb4c35b",
+        "s3_key": "maps/pi.pmtiles"
+      }
+    },
+    {
+      "slug": "pr",
+      "name": "Curitiba",
+      "state_uf": "PR",
+      "total_places": 5,
+      "bounds": [
+        -25.55,
+        -49.35,
+        -25.35,
+        -49.2
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_pr.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "9886c334c465788c2d6a54181708ee3410ffb02ab5028484945823b8704bb7da",
+        "s3_key": "sqlite/pack_pr.sqlite"
+      },
+      "pmtiles": {
+        "filename": "pr.pmtiles",
+        "size_bytes": 811,
+        "size_kb": 0.8,
+        "sha256": "e008f9338ec27fecc2dbd4c68253dfed077ace1984a33b3616ad19e4a5643950",
+        "s3_key": "maps/pr.pmtiles"
+      }
+    },
+    {
+      "slug": "sc",
+      "name": "Florianópolis",
+      "state_uf": "SC",
+      "total_places": 5,
+      "bounds": [
+        -27.85,
+        -48.65,
+        -27.4,
+        -48.35
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_sc.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "3e1b3927eacd1bc70dff91eee6914c9fef047d3bd1c3e433b77e899b957501b0",
+        "s3_key": "sqlite/pack_sc.sqlite"
+      },
+      "pmtiles": {
+        "filename": "sc.pmtiles",
+        "size_bytes": 797,
+        "size_kb": 0.8,
+        "sha256": "a279cfed96e547d42054a107983a4e2674c9153375fc40fbc1a7a18b28cd4162",
+        "s3_key": "maps/sc.pmtiles"
+      }
+    },
+    {
+      "slug": "rs",
+      "name": "Porto Alegre",
+      "state_uf": "RS",
+      "total_places": 5,
+      "bounds": [
+        -30.15,
+        -51.3,
+        -29.95,
+        -51.1
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_rs.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "4d3bd6aba8795212746cff1e77e2877f7ad7965d61d9334b3a9ebce0daf2b765",
+        "s3_key": "sqlite/pack_rs.sqlite"
+      },
+      "pmtiles": {
+        "filename": "rs.pmtiles",
+        "size_bytes": 804,
+        "size_kb": 0.8,
+        "sha256": "8056c12d13e378c5e11a6cedb98e445fb1805e6e137754a2a08848f7a03905ae",
+        "s3_key": "maps/rs.pmtiles"
+      }
+    },
+    {
+      "slug": "es",
+      "name": "Vitória",
+      "state_uf": "ES",
+      "total_places": 4,
+      "bounds": [
+        -20.35,
+        -40.35,
+        -20.25,
+        -40.25
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_es.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "ad3f340b3e5e97df8b83a34fe83177c680fe62fe7ffbfd9e0c90e81a4a2d3ce9",
+        "s3_key": "sqlite/pack_es.sqlite"
+      },
+      "pmtiles": {
+        "filename": "es.pmtiles",
+        "size_bytes": 784,
+        "size_kb": 0.8,
+        "sha256": "443758198e2461de03634f406b7b301f9aa1e6e9b8b2401edb606718e53bbaa9",
+        "s3_key": "maps/es.pmtiles"
+      }
+    },
+    {
+      "slug": "go",
+      "name": "Goiânia",
+      "state_uf": "GO",
+      "total_places": 4,
+      "bounds": [
+        -16.75,
+        -49.35,
+        -16.6,
+        -49.2
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_go.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "24b396178362854adb93c43c51d3d9838f84b33b94e3a96a741fe4f294c3853b",
+        "s3_key": "sqlite/pack_go.sqlite"
+      },
+      "pmtiles": {
+        "filename": "go.pmtiles",
+        "size_bytes": 798,
+        "size_kb": 0.8,
+        "sha256": "ac7b59df6acbe65c0e92c557376b06012fc589d0da95ea6e95e02f2fd6009ac3",
+        "s3_key": "maps/go.pmtiles"
+      }
+    },
+    {
+      "slug": "mt",
+      "name": "Cuiabá",
+      "state_uf": "MT",
+      "total_places": 4,
+      "bounds": [
+        -15.65,
+        -56.15,
+        -15.55,
+        -56.0
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_mt.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "9e8baf10169b1d485d654d42d1c97c6df7d643e6fe36284770c0d3239aa6006b",
+        "s3_key": "sqlite/pack_mt.sqlite"
+      },
+      "pmtiles": {
+        "filename": "mt.pmtiles",
+        "size_bytes": 797,
+        "size_kb": 0.8,
+        "sha256": "5fe8195e1e73a4cb48446b1a57d649530b5cbd1e4f038de84849d74a6ea4ced4",
+        "s3_key": "maps/mt.pmtiles"
+      }
+    },
+    {
+      "slug": "ms",
+      "name": "Campo Grande",
+      "state_uf": "MS",
+      "total_places": 4,
+      "bounds": [
+        -20.55,
+        -54.7,
+        -20.4,
+        -54.55
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_ms.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "3ba85cda48b0675b44e4f44c1cb368c6115718f8f7a8bf63b95c0f8e43ec8b8f",
+        "s3_key": "sqlite/pack_ms.sqlite"
+      },
+      "pmtiles": {
+        "filename": "ms.pmtiles",
+        "size_bytes": 794,
+        "size_kb": 0.8,
+        "sha256": "28f7f89aa66dbbc8a6a8289aa7b73a6408ffbcb9eff58bad86aeb83173cf5b83",
+        "s3_key": "maps/ms.pmtiles"
+      }
+    },
+    {
+      "slug": "am",
+      "name": "Manaus",
+      "state_uf": "AM",
+      "total_places": 5,
+      "bounds": [
+        -3.18,
+        -60.1,
+        -3.0,
+        -59.9
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_am.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "9aa74121ad338a6a28b579f3bdf0fc7028745b7b310251a3f729746d381a0fe8",
+        "s3_key": "sqlite/pack_am.sqlite"
+      },
+      "pmtiles": {
+        "filename": "am.pmtiles",
+        "size_bytes": 775,
+        "size_kb": 0.8,
+        "sha256": "52636764c8f40a572afb4457665aa97aa00b1b740a2b6cf882cbf973e3a14300",
+        "s3_key": "maps/am.pmtiles"
+      }
+    },
+    {
+      "slug": "pa",
+      "name": "Belém",
+      "state_uf": "PA",
+      "total_places": 5,
+      "bounds": [
+        -1.5,
+        -48.55,
+        -1.35,
+        -48.4
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_pa.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "cd157473fdfd8988f929396a2025e66a308c708cf77ea85977211d8abd431da5",
+        "s3_key": "sqlite/pack_pa.sqlite"
+      },
+      "pmtiles": {
+        "filename": "pa.pmtiles",
+        "size_bytes": 791,
+        "size_kb": 0.8,
+        "sha256": "d0369181479ce6f352b1cbbb19333d5e788f8b50b2e847bc4d417cfd58a9b5ea",
+        "s3_key": "maps/pa.pmtiles"
+      }
+    },
+    {
+      "slug": "to",
+      "name": "Palmas",
+      "state_uf": "TO",
+      "total_places": 4,
+      "bounds": [
+        -10.3,
+        -48.4,
+        -10.15,
+        -48.25
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_to.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "a6af32c8e2ca98e1d5aeb27d35ba6cd3892ff6cddb2ff240d3adf4980941a898",
+        "s3_key": "sqlite/pack_to.sqlite"
+      },
+      "pmtiles": {
+        "filename": "to.pmtiles",
+        "size_bytes": 794,
+        "size_kb": 0.8,
+        "sha256": "e0f63ee9508597944764dbd71227c5d632e5878e7d40dbe2bb3feba9a0951ad3",
+        "s3_key": "maps/to.pmtiles"
+      }
+    },
+    {
+      "slug": "ro",
+      "name": "Porto Velho",
+      "state_uf": "RO",
+      "total_places": 4,
+      "bounds": [
+        -8.8,
+        -63.95,
+        -8.7,
+        -63.8
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_ro.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "b79e7eb80dda4cba0f6da4de5f547b54bdb99800af24e766809aaf178748e930",
+        "s3_key": "sqlite/pack_ro.sqlite"
+      },
+      "pmtiles": {
+        "filename": "ro.pmtiles",
+        "size_bytes": 787,
+        "size_kb": 0.8,
+        "sha256": "a817934e5e3e5346554359939e2c94bf6d7b335e185925af17173310e8593577",
+        "s3_key": "maps/ro.pmtiles"
+      }
+    },
+    {
+      "slug": "ac",
+      "name": "Rio Branco",
+      "state_uf": "AC",
+      "total_places": 4,
+      "bounds": [
+        -9.99,
+        -67.85,
+        -9.9,
+        -67.75
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_ac.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "5a3c90c7736bf1a0577116f33805f7694f2a8205e28cbe00a5d1f379b66de59d",
+        "s3_key": "sqlite/pack_ac.sqlite"
+      },
+      "pmtiles": {
+        "filename": "ac.pmtiles",
+        "size_bytes": 786,
+        "size_kb": 0.8,
+        "sha256": "02a13468bddb302da1d4dbcec8b62337cfd715649e413b98538e59ddfa1cce79",
+        "s3_key": "maps/ac.pmtiles"
+      }
+    },
+    {
+      "slug": "ap",
+      "name": "Macapá",
+      "state_uf": "AP",
+      "total_places": 4,
+      "bounds": [
+        0.0,
+        -51.15,
+        0.1,
+        -51.0
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_ap.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "f9ab0f747e3bb42f6a988b5b7e7fc9cd63dfaeffdcd8a01936eba0fc3ae653ed",
+        "s3_key": "sqlite/pack_ap.sqlite"
+      },
+      "pmtiles": {
+        "filename": "ap.pmtiles",
+        "size_bytes": 776,
+        "size_kb": 0.8,
+        "sha256": "3106c626a5cb6aff118a11112ad66cdfe874bad3792da7e14beb055a88226be6",
+        "s3_key": "maps/ap.pmtiles"
+      }
+    },
+    {
+      "slug": "rr",
+      "name": "Boa Vista",
+      "state_uf": "RR",
+      "total_places": 4,
+      "bounds": [
+        2.78,
+        -60.75,
+        2.88,
+        -60.6
+      ],
+      "version": "1.0.0",
+      "sqlite": {
+        "filename": "pack_rr.sqlite",
+        "size_bytes": 28672,
+        "size_kb": 28.0,
+        "sha256": "fa45b75d0d8d9c5ed45c4f661ac1383c396390910462d4fe063001b602b361be",
+        "s3_key": "sqlite/pack_rr.sqlite"
+      },
+      "pmtiles": {
+        "filename": "rr.pmtiles",
+        "size_bytes": 782,
+        "size_kb": 0.8,
+        "sha256": "f617bc072482e55512757c4063f7260a3aeb9da5ee3c0ac2c0e78df8b4d9ab79",
+        "s3_key": "maps/rr.pmtiles"
+      }
+    }
+  ]
+}
