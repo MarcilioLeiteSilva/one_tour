@@ -127,7 +127,6 @@ export async function sendFcmPush(params: SendPushParams): Promise<PushResult> {
           android: {
             priority: 'high',
             notification: {
-              channelId: 'onetour_notifications',
               priority: 'high',
               defaultSound: true,
               defaultVibrateTimings: true,
@@ -152,7 +151,6 @@ export async function sendFcmPush(params: SendPushParams): Promise<PushResult> {
           android: {
             priority: 'high',
             notification: {
-              channelId: 'onetour_notifications',
               priority: 'high',
               defaultSound: true,
               defaultVibrateTimings: true,

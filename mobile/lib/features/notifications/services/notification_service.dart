@@ -109,6 +109,11 @@ class NotificationService {
       await subscribeToTopic('${stateSlug}_geral');
       await subscribeToTopic('${stateSlug}_promocoes');
       await subscribeToTopic('${stateSlug}_eventos');
+      await subscribeToTopic('${stateSlug}_recife');
+      await subscribeToTopic('${stateSlug}_porto_de_galinhas');
+      await subscribeToTopic('${stateSlug}_olinda');
+      await subscribeToTopic('${stateSlug}_carneiros');
+      await subscribeToTopic('${stateSlug}_noronha');
       await subscribeToTopic('global_ofertas');
 
       // Listen to foreground notifications
