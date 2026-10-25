@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { query } from '../db.js';
 import { recalculateRankings } from '../rankings.js';
 import { asyncHandler, isPlaceId, isSlug, isUf, requireAdmin } from '../middleware.js';
+import { sendFcmPush } from '../services/fcm.js';
 
 export const adminRouter = Router();
 adminRouter.use(requireAdmin);
@@ -118,40 +119,32 @@ adminRouter.patch(
   }),
 );
 
-/** POST /api/v1/admin/notifications/send — dispara notificação push segmentada via FCM. */
+/** POST /api/v1/admin/notifications/send — dispara notificação push via FCM. */
 adminRouter.post(
   '/notifications/send',
   asyncHandler(async (req: Request, res: Response) => {
-    const { topic, title, body, image_url, action_type, action_value } = req.body || {};
-    if (!topic || !title || !body) {
-      res.status(400).json({ error: 'topic, title and body are required' });
+    const { topic, device_token, title, body, image_url, action_type, action_value } = req.body || {};
+    if ((!topic && !device_token) || !title || !body) {
+      res.status(400).json({ error: 'topic (or device_token), title and body are required' });
       return;
     }
 
-    const payload = {
-      topic: String(topic).toLowerCase(),
-      notification: {
-        title: String(title),
-        body: String(body),
-        image: image_url ? String(image_url) : undefined,
-      },
-      data: {
-        click_action: 'FLUTTER_NOTIFICATION_CLICK',
-        action_type: action_type || 'open_city',
-        action_value: action_value || 'recife',
-        topic: String(topic).toLowerCase(),
-        timestamp: new Date().toISOString(),
-      },
-    };
-
-    console.log(`[PUSH] Dispatched to /topics/${payload.topic}: "${title}"`);
+    const result = await sendFcmPush({
+      topic: topic ? String(topic) : undefined,
+      deviceToken: device_token ? String(device_token) : undefined,
+      title: String(title),
+      body: String(body),
+      imageUrl: image_url ? String(image_url) : undefined,
+      actionType: action_type ? String(action_type) : undefined,
+      actionValue: action_value ? String(action_value) : undefined,
+    });
 
     res.json({
       success: true,
-      message_id: `fcm_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      topic: payload.topic,
-      broadcast_at: payload.data.timestamp,
-      payload,
+      message_id: result.messageId,
+      target: result.target,
+      broadcast_at: result.broadcastAt,
+      is_real_dispatch: result.isRealDispatch,
     });
   }),
 );
