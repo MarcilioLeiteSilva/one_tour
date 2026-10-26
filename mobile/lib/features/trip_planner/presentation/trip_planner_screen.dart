@@ -5,6 +5,7 @@ import '../../../core/config/app_config.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/trip_request.dart';
 import '../services/local_db_service.dart';
+import '../../shell/presentation/app_drawer.dart';
 import 'trip_planner_controller.dart';
 import 'trip_wizard_modal.dart';
 
@@ -19,7 +20,15 @@ class TripPlannerScreen extends ConsumerWidget {
     final savedTripsAsync = ref.watch(savedTripsProvider);
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+            tooltip: 'Menu Principal',
+          ),
+        ),
         title: Text(l10n.tabItineraries),
       ),
       body: ListView(

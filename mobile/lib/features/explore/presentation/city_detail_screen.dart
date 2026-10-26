@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -342,7 +343,7 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
                           },
                         ),
 
-                      const SizedBox(height: 100), // Espaço para o FAB
+                      SizedBox(height: 110 + MediaQuery.of(context).padding.bottom), // Espaço para o FAB
                     ],
                   ),
                 ),
@@ -352,7 +353,7 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
 
           // Botão Flutuante (FAB) Grande para Criar Roteiro
           Positioned(
-            bottom: 24,
+            bottom: 16 + MediaQuery.of(context).padding.bottom,
             left: 20,
             right: 20,
             child: Container(
@@ -407,148 +408,238 @@ class _CityAttractionItem extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
+        final bottomInset = MediaQuery.of(ctx).padding.bottom;
         return Container(
           decoration: BoxDecoration(
             color: theme.scaffoldBackgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          padding: const EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Image.network(
-                    att.imageUrl,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 180,
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.place, size: 48, color: Colors.grey),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, math.max(bottomInset, 16) + 24),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '#${att.rankPosition} no Estado • ${att.cityName}',
-                        style: const TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                        ),
+                        color: Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${att.rating} (${att.reviewsCount})',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  // Foto da Atração com Badge Flutuante "Ver no Mapa"
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.network(
+                          att.imageUrl,
+                          height: 190,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 190,
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.place, size: 48, color: Colors.grey),
+                          ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  att.name,
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${att.category} • Duração sugerida: ${att.durationMinutes} min',
-                  style: TextStyle(color: config.primaryColor, fontWeight: FontWeight.w600, fontSize: 12),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  att.description,
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
-                    const SizedBox(width: 4),
-                    Text(
-                      'GPS: ${att.lat.toStringAsFixed(4)}, ${att.lon.toStringAsFixed(4)}',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        icon: Icon(
-                          isLiked ? Icons.favorite : Icons.favorite_border,
-                          color: Colors.redAccent,
-                        ),
-                        label: Text(isLiked ? 'Salvo' : 'Salvar'),
-                        onPressed: () {
-                          ref.read(userLikesProvider.notifier).toggleLike(att.id);
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(isLiked ? 'Removido dos salvos' : 'Adicionado aos seus favoritos offline!'),
-                              duration: const Duration(seconds: 2),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Material(
+                          color: Colors.black.withOpacity(0.65),
+                          borderRadius: BorderRadius.circular(20),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              context.go('/mapa?filter=${att.cityId}&attractionId=${att.id}&lat=${att.lat}&lon=${att.lon}');
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.map_rounded, size: 16, color: Colors.white),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Ver no Mapa',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: config.primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
                         ),
-                        icon: const Icon(Icons.star_rate_rounded, color: Colors.amber),
-                        label: const Text('Avaliar'),
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _showReviewDialog(context, att);
-                        },
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '#${att.rankPosition} no Estado • ${att.cityName}',
+                          style: const TextStyle(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${att.rating} (${att.reviewsCount})',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    att.name,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${att.category} • Duração sugerida: ${att.durationMinutes} min',
+                    style: TextStyle(color: config.primaryColor, fontWeight: FontWeight.w600, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    att.description,
+                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'GPS: ${att.lat.toStringAsFixed(4)}, ${att.lon.toStringAsFixed(4)}',
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          context.go('/mapa?filter=${att.cityId}&attractionId=${att.id}&lat=${att.lat}&lon=${att.lon}');
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.near_me_rounded, size: 14, color: config.primaryColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Localizar',
+                              style: TextStyle(
+                                color: config.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Botão Principal: Ver no Mapa
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: config.primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 2,
+                      ),
+                      icon: const Icon(Icons.map_rounded, size: 20, color: Colors.white),
+                      label: const Text(
+                        'Ver no Mapa',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        context.go('/mapa?filter=${att.cityId}&attractionId=${att.id}&lat=${att.lat}&lon=${att.lon}');
+                      },
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-              ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Botões Secundários: Salvar e Avaliar
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          icon: Icon(
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                            color: Colors.redAccent,
+                          ),
+                          label: Text(isLiked ? 'Salvo' : 'Salvar'),
+                          onPressed: () {
+                            ref.read(userLikesProvider.notifier).toggleLike(att.id);
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(isLiked ? 'Removido dos salvos' : 'Adicionado aos seus favoritos offline!'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          icon: const Icon(Icons.star_rate_rounded, color: Colors.amber),
+                          label: const Text('Avaliar'),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _showReviewDialog(context, att);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         );
@@ -726,8 +817,15 @@ class _CityAttractionItem extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right, color: Colors.grey),
+            const SizedBox(width: 4),
+            IconButton(
+              icon: const Icon(Icons.map_rounded, color: Color(0xFF0F4C81), size: 22),
+              tooltip: 'Ver no Mapa',
+              onPressed: () {
+                context.go('/mapa?filter=${att.cityId}&attractionId=${att.id}&lat=${att.lat}&lon=${att.lon}');
+              },
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
           ],
         ),
       ),

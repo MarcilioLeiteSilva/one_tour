@@ -113,13 +113,13 @@ abstract class AppLocalizations {
   /// No description provided for @tabItineraries.
   ///
   /// In pt, this message translates to:
-  /// **'Roteiros'**
+  /// **'Rotas'**
   String get tabItineraries;
 
   /// No description provided for @tabMap.
   ///
   /// In pt, this message translates to:
-  /// **'Mapa'**
+  /// **'Mapas'**
   String get tabMap;
 
   /// No description provided for @tabSaved.
@@ -185,13 +185,13 @@ abstract class AppLocalizations {
   /// No description provided for @createSmartTrip.
   ///
   /// In pt, this message translates to:
-  /// **'Montar Roteiro Inteligente'**
+  /// **'Montar Rota Rápida'**
   String get createSmartTrip;
 
   /// No description provided for @tripPlannerTitle.
   ///
   /// In pt, this message translates to:
-  /// **'Assistente de Roteirização'**
+  /// **'Criar Rotas'**
   String get tripPlannerTitle;
 
   /// No description provided for @howManyDays.
@@ -299,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @btnGenerateTrip.
   ///
   /// In pt, this message translates to:
-  /// **'Gerar Roteiro Otimizado'**
+  /// **'Gerar Rota Otimizada'**
   String get btnGenerateTrip;
 
   /// No description provided for @dayTitle.
@@ -335,7 +335,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareTrip.
   ///
   /// In pt, this message translates to:
-  /// **'Compartilhar Roteiro'**
+  /// **'Compartilhar Rota'**
   String get shareTrip;
 
   /// No description provided for @likesCount.

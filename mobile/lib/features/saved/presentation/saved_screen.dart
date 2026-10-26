@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../explore/data/mock_pe_data.dart';
 import '../../explore/presentation/explore_controller.dart';
 import '../../trip_planner/presentation/trip_planner_controller.dart';
+import '../../shell/presentation/app_drawer.dart';
 
 class SavedScreen extends ConsumerWidget {
   const SavedScreen({super.key});
@@ -26,7 +27,15 @@ class SavedScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        drawer: const AppDrawer(),
         appBar: AppBar(
+          leading: Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.menu_rounded),
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+              tooltip: 'Menu Principal',
+            ),
+          ),
           title: Text(l10n.tabSaved),
           bottom: TabBar(
             indicatorColor: config.primaryColor,

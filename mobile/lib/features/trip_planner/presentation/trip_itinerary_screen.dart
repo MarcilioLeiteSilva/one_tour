@@ -6,6 +6,8 @@ import '../../../core/config/app_flavor.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/itinerary_models.dart';
 import '../domain/trip_request.dart';
+import '../services/local_db_service.dart';
+import '../../social/services/social_service.dart';
 import 'trip_planner_controller.dart';
 import '../../house_ads/presentation/house_ad_interstitial_modal.dart';
 import '../../house_ads/services/house_ads_service.dart';
@@ -111,6 +113,11 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
             ),
             actions: [
               IconButton(
+                icon: const Icon(Icons.rate_review_outlined),
+                tooltip: 'Avaliar Roteiro',
+                onPressed: () => _showTripReviewModal(context, plan),
+              ),
+              IconButton(
                 icon: const Icon(Icons.share_outlined),
                 onPressed: () async {
                   final ads = await ref.read(houseAdsServiceProvider).getAds(
@@ -130,16 +137,19 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
               ),
               IconButton(
                 icon: const Icon(Icons.map_outlined),
-                onPressed: () => context.go('/mapa'),
+                tooltip: 'Ver Rota no Mapa',
+                onPressed: () => context.go('/mapa?filter=roteiro'),
               ),
             ],
             bottom: TabBar(
               controller: _tabController,
               isScrollable: plan.days.length > 4,
               indicatorColor: config.primaryColor,
+              indicatorWeight: 3.5,
               labelColor: config.primaryColor,
-              unselectedLabelColor: Colors.grey,
-              labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+              unselectedLabelColor: const Color(0xFF334155),
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               tabs: List.generate(
                 plan.days.length,
                 (index) => Tab(text: l10n.dayTitle(index + 1)),
@@ -148,9 +158,219 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
           ),
           body: TabBarView(
             controller: _tabController,
-            children: plan.days.map((day) {
-              return _buildDayTimeline(context, day, config);
+            children: plan.days.asMap().entries.map((entry) {
+              final dayIndex = entry.key;
+              final day = entry.value;
+              return _buildDayTimeline(
+                context,
+                day,
+                config,
+                plan: plan,
+                isLastDay: dayIndex == plan.days.length - 1,
+              );
             }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showPlaceReviewDialog(BuildContext context, Place place) {
+    double selectedRating = 5.0;
+    final commentCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dlgCtx) {
+        return StatefulBuilder(
+          builder: (context, setDlgState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                  const Icon(Icons.rate_review_outlined, color: Colors.amber, size: 26),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Avaliar ${place.name}',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Como foi sua experiência neste local?'),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      final star = index + 1;
+                      return IconButton(
+                        icon: Icon(
+                          star <= selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
+                          color: Colors.amber,
+                          size: 32,
+                        ),
+                        onPressed: () => setDlgState(() => selectedRating = star.toDouble()),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: commentCtrl,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Escreva seu comentário ou dica para outros viajantes...',
+                      hintStyle: const TextStyle(fontSize: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dlgCtx),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await LocalDbService.instance.submitReview(
+                      place.id,
+                      selectedRating,
+                      comment: commentCtrl.text.trim(),
+                    );
+                    await SocialService.instance.submitReview(
+                      place.id,
+                      selectedRating,
+                      citySlug: place.citySlug,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(dlgCtx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: Colors.green,
+                          content: Text('✓ Sua avaliação foi registrada e salva com sucesso!'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Publicar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showTripReviewModal(BuildContext context, TripPlan plan, {ItineraryDay? currentDay}) {
+    final stops = currentDay != null
+        ? currentDay.stops.where((s) => !s.isLunch).toList()
+        : plan.days.expand((d) => d.stops.where((s) => !s.isLunch)).toList();
+
+    if (stops.isEmpty) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.rate_review_rounded, color: Colors.amber, size: 26),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      currentDay != null
+                          ? 'Avaliar Atrações do Dia ${currentDay.dayNumber}'
+                          : 'Avaliar Atrações do Roteiro',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Escolha a atração visitada para registrar suas estrelas e comentário offline:',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.45,
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: stops.length,
+                  separatorBuilder: (separatorCtx, index) => const Divider(height: 1),
+                  itemBuilder: (itemCtx, index) {
+                    final stop = stops[index];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          stop.place.imageUrl.isNotEmpty
+                              ? stop.place.imageUrl
+                              : 'https://images.unsplash.com/photo-1577039508937-99c3b639ba77?auto=format&fit=crop&w=800&q=80',
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (errCtx, err, stack) => Container(
+                            width: 48,
+                            height: 48,
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.photo, size: 20, color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        stop.place.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      subtitle: Text(
+                        '${stop.place.citySlug.toUpperCase()} • ${stop.startTime}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                      trailing: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          textStyle: const TextStyle(fontSize: 12),
+                        ),
+                        icon: const Icon(Icons.star, size: 14, color: Colors.amber),
+                        label: const Text('Avaliar'),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showPlaceReviewDialog(context, stop.place);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -160,16 +380,22 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
   Widget _buildDayTimeline(
     BuildContext context,
     ItineraryDay day,
-    FlavorConfig config,
-  ) {
+    FlavorConfig config, {
+    required TripPlan plan,
+    required bool isLastDay,
+  }) {
     if (day.stops.isEmpty) {
       return const Center(child: Text('Nenhuma atração programada para este dia.'));
     }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      itemCount: day.stops.length,
+      itemCount: day.stops.length + 1,
       itemBuilder: (context, index) {
+        if (index == day.stops.length) {
+          return _buildCompletionCard(context, day, plan, config, isLastDay);
+        }
+
         final stop = day.stops[index];
         final isFirst = index == 0;
         final isLast = index == day.stops.length - 1;
@@ -200,6 +426,7 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
               stop: stop,
               isFirst: isFirst,
               isLast: isLast && stop.transitToNext == null,
+              onRate: () => _showPlaceReviewDialog(context, stop.place),
             ),
             if (stop.transitToNext != null)
               _TransitIndicator(
@@ -211,17 +438,105 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
       },
     );
   }
+
+  Widget _buildCompletionCard(
+    BuildContext context,
+    ItineraryDay day,
+    TripPlan plan,
+    FlavorConfig config,
+    bool isLastDay,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 24),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            config.primaryColor.withOpacity(0.08),
+            config.secondaryColor.withOpacity(0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: config.primaryColor.withOpacity(0.25),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isLastDay ? '🎉 Roteiro Concluído!' : '✓ Dia ${day.dayNumber} Finalizado!',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    Text(
+                      isLastDay
+                          ? 'Você completou todas as paradas em ${plan.title}.'
+                          : '${day.stops.where((s) => !s.isLunch).length} atrações visitadas hoje.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Como foi sua experiência? Avalie as atrações visitadas com estrelas e comentário. Seus votos são salvos offline e sincronizados com a Rede One Tour.',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.3),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: config.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              icon: const Icon(Icons.star_rounded, color: Colors.amber),
+              label: Text(
+                isLastDay ? 'Avaliar Roteiro Completo' : 'Avaliar Atrações deste Dia',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              onPressed: () => _showTripReviewModal(context, plan, currentDay: isLastDay ? null : day),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _TimelineStop extends ConsumerWidget {
   final ItineraryStop stop;
   final bool isFirst;
   final bool isLast;
+  final VoidCallback? onRate;
 
   const _TimelineStop({
     required this.stop,
     this.isFirst = false,
     this.isLast = false,
+    this.onRate,
   });
 
   @override
@@ -317,11 +632,27 @@ class _TimelineStop extends ConsumerWidget {
                           ),
                           Row(
                             children: [
-                              const Icon(Icons.star, size: 12, color: Colors.amber),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${place.ratingAvg}',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              InkWell(
+                                onTap: onRate,
+                                borderRadius: BorderRadius.circular(6),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withOpacity(0.14),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.star_rounded, size: 13, color: Colors.amber),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        '${place.ratingAvg}',
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 6),
                               GestureDetector(

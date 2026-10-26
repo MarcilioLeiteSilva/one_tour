@@ -45,7 +45,7 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
         left: 20,
         right: 20,
         top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -131,11 +131,21 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
                     width: 55,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? config.primaryColor : theme.cardColor,
+                      color: isSelected ? config.primaryColor : (isDark ? const Color(0xFF1E293B) : Colors.white),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSelected ? Colors.transparent : Colors.grey.withOpacity(0.25),
+                        color: isSelected
+                            ? Colors.transparent
+                            : (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+                        width: 1.5,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isSelected ? 0.2 : 0.06),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
@@ -143,15 +153,20 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
                           '$day',
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : null,
+                            fontWeight: FontWeight.w800,
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark ? Colors.white : const Color(0xFF0F172A)),
                           ),
                         ),
                         Text(
                           day == 1 ? 'dia' : 'dias',
                           style: TextStyle(
                             fontSize: 11,
-                            color: isSelected ? Colors.white.withOpacity(0.9) : Colors.grey.shade500,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected
+                                ? Colors.white.withOpacity(0.9)
+                                : (isDark ? Colors.grey.shade400 : const Color(0xFF475569)),
                           ),
                         ),
                       ],
@@ -343,22 +358,60 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
 
   Widget _buildCityChip(String city, IconData icon, dynamic config) {
     final isSelected = _selectedCity.toLowerCase().trim() == city.toLowerCase().trim();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color textColor = isSelected
+        ? Colors.white
+        : (isDark ? Colors.white : const Color(0xFF0F172A));
+    final Color iconColor = isSelected
+        ? Colors.white
+        : (isDark ? const Color(0xFF38BDF8) : config.primaryColor);
+    final Color bgColor = isSelected
+        ? config.primaryColor
+        : (isDark ? const Color(0xFF1E293B) : Colors.white);
+    final Color borderColor = isSelected
+        ? Colors.transparent
+        : (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8));
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        selected: isSelected,
-        avatar: Icon(icon, size: 14, color: isSelected ? Colors.white : config.primaryColor),
-        label: Text(
-          city,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.white : null,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _selectedCity = city),
+          borderRadius: BorderRadius.circular(20),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: borderColor, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isSelected ? 0.2 : 0.06),
+                  blurRadius: isSelected ? 6 : 3,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 15, color: iconColor),
+                const SizedBox(width: 6),
+                Text(
+                  city,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                    color: textColor,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        selectedColor: config.primaryColor,
-        backgroundColor: Theme.of(context).cardColor,
-        onSelected: (_) => setState(() => _selectedCity = city),
       ),
     );
   }
@@ -379,16 +432,22 @@ class _PaceOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withOpacity(0.08) : Theme.of(context).cardColor,
+          color: isSelected
+              ? activeColor.withOpacity(0.12)
+              : (isDark ? const Color(0xFF1E293B) : Colors.white),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? activeColor : Colors.grey.withOpacity(0.2),
-            width: isSelected ? 1.5 : 1,
+            color: isSelected
+                ? activeColor
+                : (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+            width: isSelected ? 1.8 : 1.3,
           ),
         ),
         child: Row(
@@ -397,14 +456,17 @@ class _PaceOption extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? activeColor : null,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w700,
+                color: isSelected
+                    ? activeColor
+                    : (isDark ? Colors.white : const Color(0xFF0F172A)),
               ),
             ),
             if (isSelected)
               Icon(Icons.check_circle, color: activeColor, size: 18)
             else
-              const Icon(Icons.circle_outlined, color: Colors.grey, size: 18),
+              Icon(Icons.circle_outlined,
+                  color: isDark ? Colors.grey.shade400 : const Color(0xFF94A3B8), size: 18),
           ],
         ),
       ),
@@ -427,23 +489,40 @@ class _FilterChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color textColor = isSelected
+        ? Colors.white
+        : (isDark ? Colors.white : const Color(0xFF0F172A));
+    final Color bgColor = isSelected
+        ? activeColor
+        : (isDark ? const Color(0xFF1E293B) : Colors.white);
+    final Color borderColor = isSelected
+        ? Colors.transparent
+        : (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8));
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor : Theme.of(context).cardColor,
+          color: bgColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.grey.withOpacity(0.2),
-          ),
+          border: Border.all(color: borderColor, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isSelected ? 0.2 : 0.06),
+              blurRadius: isSelected ? 6 : 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.white : null,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+            color: textColor,
           ),
         ),
       ),

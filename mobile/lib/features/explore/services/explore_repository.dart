@@ -78,6 +78,16 @@ class ExploreRepository {
   Future<List<AttractionModel>> getAttractions({String uf = 'PE', String? citySlug}) async {
     final normalizedUf = uf.toUpperCase().trim();
 
+    // 1. Sempre carrega catálogo curado local completo (Recife, Olinda, Porto, Carneiros, Noronha)
+    final localCatalog = (citySlug != null && citySlug.isNotEmpty)
+        ? await MockPeData.getAttractionsForCity(citySlug)
+        : await MockPeData.getAllCuratedAttractions();
+
+    final Map<String, AttractionModel> mergedMap = {
+      for (final att in localCatalog) att.id: att,
+    };
+
+    // 2. Mescla com eventuais atualizações vindas da VPS PocketBase
     try {
       String filter = 'uf="$normalizedUf"';
       if (citySlug != null && citySlug.isNotEmpty) {
@@ -94,46 +104,36 @@ class ExploreRepository {
         final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>? ?? [];
 
-        if (items.isNotEmpty) {
-          final list = items.map((item) {
-            final m = item as Map<String, dynamic>;
-            final slug = (m['slug'] ?? m['id'] ?? '').toString();
-            final cSlug = (m['cidade_slug'] ?? '').toString();
+        for (final item in items) {
+          final m = item as Map<String, dynamic>;
+          final slug = (m['slug'] ?? m['id'] ?? '').toString();
+          final cSlug = (m['cidade_slug'] ?? '').toString();
 
-            return AttractionModel(
-              id: slug,
-              name: m['nome'] ?? 'Atração',
-              cityId: cSlug,
-              cityName: MockPeData.cityNameFromSlug(cSlug),
-              category: m['categoria'] ?? 'Turismo',
-              imageUrl: _getAttractionImageUrl(slug),
-              rating: (m['rating_avg'] as num?)?.toDouble() ?? 4.8,
-              reviewsCount: (m['rating_count'] as num?)?.toInt() ?? 1200,
-              likesCount: (m['likes_count'] as num?)?.toInt() ?? 3400,
-              rankPosition: (m['rank_posicao'] as num?)?.toInt() ?? 1,
-              durationMinutes: (m['duracao_min'] as num?)?.toInt() ?? 90,
-              isMustSee: m['must_see'] == true,
-              isKidFriendly: m['kid_friendly'] == true,
-              description: m['descricao_pt'] ?? '',
-              lat: (m['lat'] as num?)?.toDouble() ?? -8.0631,
-              lon: (m['lon'] as num?)?.toDouble() ?? -34.8711,
-            );
-          }).toList();
-
-          debugPrint('🌐 [ExploreRepository] Carregadas ${list.length} atrações do PocketBase VPS!');
-          return _enrichWithSocialStats(list);
+          mergedMap[slug] = AttractionModel(
+            id: slug,
+            name: m['nome'] ?? 'Atração',
+            cityId: cSlug,
+            cityName: MockPeData.cityNameFromSlug(cSlug),
+            category: m['categoria'] ?? 'Turismo',
+            imageUrl: _getAttractionImageUrl(slug),
+            rating: (m['rating_avg'] as num?)?.toDouble() ?? 4.8,
+            reviewsCount: (m['rating_count'] as num?)?.toInt() ?? 1200,
+            likesCount: (m['likes_count'] as num?)?.toInt() ?? 3400,
+            rankPosition: (m['rank_posicao'] as num?)?.toInt() ?? 1,
+            durationMinutes: (m['duracao_min'] as num?)?.toInt() ?? 90,
+            isMustSee: m['must_see'] == true,
+            isKidFriendly: m['kid_friendly'] == true,
+            description: m['descricao_pt'] ?? '',
+            lat: (m['lat'] as num?)?.toDouble() ?? -8.0631,
+            lon: (m['lon'] as num?)?.toDouble() ?? -34.8711,
+          );
         }
       }
     } catch (e) {
-      debugPrint('ℹ️ [ExploreRepository] Falha ao consultar atrações na VPS ($e). Usando SQLite local.');
+      debugPrint('ℹ️ [ExploreRepository] VPS offline ou lenta ($e). Usando catálogo local.');
     }
 
-    // Fallback: SQLite POI Catalog
-    final fallbackList = (citySlug != null && citySlug.isNotEmpty)
-        ? await MockPeData.getAttractionsForCity(citySlug)
-        : await MockPeData.getAllCuratedAttractions();
-
-    return _enrichWithSocialStats(fallbackList);
+    return _enrichWithSocialStats(mergedMap.values.toList());
   }
 
   List<AttractionModel> _enrichWithSocialStats(List<AttractionModel> items) {

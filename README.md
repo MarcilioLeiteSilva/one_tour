@@ -8,11 +8,12 @@ Ecossistema tecnológico e comercial composto por **27 aplicativos móveis indep
 
 ```
 One_tour/
+├── network_status.json         # Configuração remota em tempo real do status dos 27 estados (Play Store)
 ├── mobile/                     # Aplicativo Flutter Single Codebase (27 Flavors)
 │   ├── android/                # Configuração Gradle com 27 Product Flavors
 │   ├── lib/
 │   │   ├── core/               # Configuração de Flavors, Temas (Material 3) e Rotas (GoRouter)
-│   │   ├── features/           # Explorar, Detalhes da Cidade, Roteiros, Mapa e Favoritos
+│   │   ├── features/           # Explorar, Detalhes, Roteiros, Mapa, Favoritos e Rede One Tour
 │   │   └── l10n/               # Internacionalização Bilíngue Nativa (PT / EN)
 │   └── pubspec.yaml
 │
@@ -56,3 +57,13 @@ curl -sSL https://get.easypanel.io | sh
 ```
 
 Mais detalhes no [Guia de Deploy no Easypanel](file:///f:/One_tour/server/README_EASYPANEL.md).
+
+---
+
+## 🌐 Rede One Tour Brasil & Publicação Dinâmica
+
+O aplicativo possui descoberta dinâmica em tempo real dos apps da rede:
+* O arquivo `network_status.json` controla o status dos 27 estados (`available` vs `coming_soon`).
+* Ao lançar um novo estado na Google Play Store (ex: Alagoas), basta alterar seu status no arquivo.
+* Todos os usuários verão o estado mudar para **Disponível** com botão direto de download na loja sem precisar de atualização do app.
+* Nos estados em preparação, os usuários podem se inscrever para receber notificação push no lançamento via tópicos FCM (`launch_<uf>`).

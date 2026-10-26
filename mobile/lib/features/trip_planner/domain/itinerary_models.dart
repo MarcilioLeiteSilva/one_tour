@@ -71,7 +71,7 @@ class Place {
       likesCount: (map['likes_count'] as num?)?.toInt() ?? 500,
       rankPosicao: (map['rank_posicao'] as num?)?.toInt() ?? 1,
       description: map['description'] as String? ?? '',
-      imageUrl: map['image_url'] as String? ?? '',
+      imageUrl: (map['image_url'] ?? map['imageUrl']) as String? ?? '',
       openingTime: map['opening_time'] as String? ?? '08:00',
       closingTime: map['closing_time'] as String? ?? '18:00',
     );

@@ -15,10 +15,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get tabExplore => 'Explorar';
 
   @override
-  String get tabItineraries => 'Roteiros';
+  String get tabItineraries => 'Rotas';
 
   @override
-  String get tabMap => 'Mapa';
+  String get tabMap => 'Mapas';
 
   @override
   String get tabSaved => 'Salvos';
@@ -59,10 +59,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get createSmartTrip => 'Montar Roteiro Inteligente';
+  String get createSmartTrip => 'Montar Rota Rápida';
 
   @override
-  String get tripPlannerTitle => 'Assistente de Roteirização';
+  String get tripPlannerTitle => 'Criar Rotas';
 
   @override
   String get howManyDays => 'Quantos dias você vai ficar?';
@@ -124,7 +124,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get interestNightlife => 'Noite & Festas';
 
   @override
-  String get btnGenerateTrip => 'Gerar Roteiro Otimizado';
+  String get btnGenerateTrip => 'Gerar Rota Otimizada';
 
   @override
   String dayTitle(int day) {
@@ -148,7 +148,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get viewOnMap => 'Ver no Mapa';
 
   @override
-  String get shareTrip => 'Compartilhar Roteiro';
+  String get shareTrip => 'Compartilhar Rota';
 
   @override
   String likesCount(int count) {

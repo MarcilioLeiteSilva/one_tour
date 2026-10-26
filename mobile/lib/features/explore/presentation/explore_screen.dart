@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import '../../house_ads/presentation/house_ad_banner.dart';
 import '../../house_ads/services/house_ads_service.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../trip_planner/presentation/trip_planner_controller.dart';
+import '../../shell/presentation/app_drawer.dart';
 import 'explore_controller.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
@@ -69,10 +71,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      drawer: const AppDrawer(),
       body: CustomScrollView(
         slivers: [
           // App Bar Moderna com Identidade do Estado
           SliverAppBar(
+            automaticallyImplyLeading: false,
             floating: true,
             pinned: false,
             expandedHeight: 120,
@@ -92,6 +96,30 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    Builder(
+                      builder: (drawerCtx) => Container(
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.menu_rounded, size: 22),
+                          onPressed: () => Scaffold.of(drawerCtx).openDrawer(),
+                          tooltip: 'Menu Principal',
+                        ),
+                      ),
+                    ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,15 +158,20 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                             children: [
                               Icon(Icons.wb_sunny_rounded, size: 14, color: Colors.orange.shade400),
                               const SizedBox(width: 4),
-                              Text(
-                                '${config.capital} • 29°C Ensolarado',
-                                style: theme.textTheme.bodyMedium,
+                              Expanded(
+                                child: Text(
+                                  '${config.capital} • 29°C Ensolarado',
+                                  style: theme.textTheme.bodyMedium,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -150,13 +183,13 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           icon: Stack(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(6),
+                                padding: const EdgeInsets.all(7),
                                 decoration: BoxDecoration(
                                   color: theme.colorScheme.surface,
                                   shape: BoxShape.circle,
                                   border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                                 ),
-                                child: const Icon(Icons.notifications_outlined, size: 18),
+                                child: const Icon(Icons.notifications_outlined, size: 20),
                               ),
                               if (ref.watch(unreadNotificationsCountProvider) > 0)
                                 Positioned(
@@ -176,49 +209,22 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           onPressed: () => context.push('/notificacoes'),
                           tooltip: 'Avisos & Promoções',
                         ),
-                        // Seletor de Idioma PT / EN
+                        // Atalho Rápido para Configurações
                         IconButton(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           constraints: const BoxConstraints(),
                           visualDensity: VisualDensity.compact,
                           icon: Container(
-                            padding: const EdgeInsets.all(6),
+                            padding: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.surface,
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                             ),
-                            child: const Icon(Icons.language, size: 18),
+                            child: const Icon(Icons.settings_outlined, size: 20),
                           ),
-                          onPressed: () {
-                            final current = ref.read(localeProvider);
-                            ref.read(localeProvider.notifier).state =
-                                current.languageCode == 'pt' ? const Locale('en') : const Locale('pt');
-                          },
-                          tooltip: 'Alternar Idioma / Switch Language',
-                        ),
-                        // Alternador de Tema Claro / Escuro
-                        IconButton(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          constraints: const BoxConstraints(),
-                          visualDensity: VisualDensity.compact,
-                          icon: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-                            ),
-                            child: Icon(
-                              isDark ? Icons.light_mode : Icons.dark_mode,
-                              size: 18,
-                            ),
-                          ),
-                          onPressed: () {
-                            ref.read(themeModeProvider.notifier).state =
-                                isDark ? ThemeMode.light : ThemeMode.dark;
-                          },
-                          tooltip: 'Tema',
+                          onPressed: () => context.push('/configuracoes'),
+                          tooltip: 'Configurações',
                         ),
                       ],
                     ),
@@ -277,7 +283,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                         else
                           IconButton(
                             icon: Icon(Icons.map_outlined, color: config.primaryColor, size: 20),
-                            onPressed: () => context.push('/mapa'),
+                            onPressed: () => context.go('/mapa'),
                             tooltip: 'Ver no Mapa',
                           ),
                       ],
@@ -586,148 +592,217 @@ class _AttractionCard extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
+        final bottomInset = MediaQuery.of(ctx).padding.bottom;
         return Container(
           decoration: BoxDecoration(
             color: theme.scaffoldBackgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          padding: const EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Image.network(
-                    item.imageUrl,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 180,
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.place, size: 48, color: Colors.grey),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, math.max(bottomInset, 16) + 24),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '#${item.rankPosition} no Estado • ${item.cityName}',
-                        style: const TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                        ),
+                        color: Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${item.rating} (${item.reviewsCount})',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.network(
+                          item.imageUrl,
+                          height: 190,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 190,
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.place, size: 48, color: Colors.grey),
+                          ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  item.name,
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${item.category} • Duração: ~${item.durationMinutes} min',
-                  style: TextStyle(color: config.primaryColor, fontWeight: FontWeight.w600, fontSize: 12),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  item.description,
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
-                    const SizedBox(width: 4),
-                    Text(
-                      'GPS: ${item.lat.toStringAsFixed(4)}, ${item.lon.toStringAsFixed(4)}',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        icon: Icon(
-                          isLiked ? Icons.favorite : Icons.favorite_border,
-                          color: Colors.redAccent,
-                        ),
-                        label: Text(isLiked ? 'Salvo' : 'Salvar'),
-                        onPressed: () {
-                          ref.read(userLikesProvider.notifier).toggleLike(item.id);
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(isLiked ? 'Removido dos salvos' : 'Adicionado aos seus favoritos!'),
-                              duration: const Duration(seconds: 2),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Material(
+                          color: Colors.black.withOpacity(0.65),
+                          borderRadius: BorderRadius.circular(20),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              context.go('/mapa?filter=${item.cityId}&attractionId=${item.id}&lat=${item.lat}&lon=${item.lon}');
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.map_rounded, size: 16, color: Colors.white),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Ver no Mapa',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: config.primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
                         ),
-                        icon: const Icon(Icons.map_rounded, size: 16),
-                        label: const Text('Ver no Mapa'),
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          context.push('/mapa');
-                        },
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '#${item.rankPosition} no Estado • ${item.cityName}',
+                          style: const TextStyle(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${item.rating} (${item.reviewsCount})',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    item.name,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${item.category} • Duração: ~${item.durationMinutes} min',
+                    style: TextStyle(color: config.primaryColor, fontWeight: FontWeight.w600, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    item.description,
+                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'GPS: ${item.lat.toStringAsFixed(4)}, ${item.lon.toStringAsFixed(4)}',
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          context.go('/mapa?filter=${item.cityId}&attractionId=${item.id}&lat=${item.lat}&lon=${item.lon}');
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.near_me_rounded, size: 14, color: config.primaryColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Localizar',
+                              style: TextStyle(
+                                color: config.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Botão Principal: Ver no Mapa
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: config.primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 2,
+                      ),
+                      icon: const Icon(Icons.map_rounded, size: 20, color: Colors.white),
+                      label: const Text(
+                        'Ver no Mapa',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        context.go('/mapa?filter=${item.cityId}&attractionId=${item.id}&lat=${item.lat}&lon=${item.lon}');
+                      },
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-              ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Botão Secundário: Salvar
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: Colors.redAccent,
+                      ),
+                      label: Text(isLiked ? 'Salvo nos Favoritos' : 'Salvar nos Favoritos'),
+                      onPressed: () {
+                        ref.read(userLikesProvider.notifier).toggleLike(item.id);
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isLiked ? 'Removido dos salvos' : 'Adicionado aos seus favoritos!'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         );

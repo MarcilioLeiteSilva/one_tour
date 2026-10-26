@@ -1,15 +1,16 @@
 # Plano de Implementação: Ecossistema One Tour (27 Estados)
 
 > **Documento:** Plano de Engenharia, Diretrizes Estratégicas e Implementação em Fases  
-> **Versão:** 1.4 (Status de Produção & Validação em Hardware Físico)  
-> **Data:** 24 de Outubro de 2026 (Atualizado após Deploy no Easypanel, Seed de PE & FCM Real)  
+> **Versão:** 1.5 (Rede One Tour Brasil, Dynamic App Discovery & Refinamentos de UI/UX)  
+> **Data:** 25 de Outubro de 2026 (Atualizado após Implementação da Rede One Tour & Mapas)  
 > **Nicho:** City Tour, Turismo Estadual, Roteirização Inteligente, Rede House Ads e Push Notificações  
 > **Plataformas:** Android e iOS (27 Aplicativos - 26 Estados + Distrito Federal)  
-> **Status Geral do Projeto:** 🚀 **MVP, Backend, CMS, Painel Web e Push 100% Operacionais em Produção**
+> **Status Geral do Projeto:** 🚀 **Piloto Validado em Hardware, Rede One Tour Integrada e Pronto para Submissão**
 
 > [!NOTE]
-> **MARCO DE IMPLEMENTAÇÃO ALCANÇADO (24/10/2026):**  
-> Todos os serviços de nuvem estão deployed e ativos no Easypanel com SSL automático. O PocketBase foi migrado com sucesso para instância dedicada com volume persistente (`onetour-pocketbase-estados`), schema v0.23 com coleções `estados`, `cidades`, `atracoes` e `campanhas_push` populadas com dados reais de Pernambuco. O Admin Web Command Center está no ar com autenticação superuser. O Firebase Admin SDK oficial foi integrado à API com projeto `app-onetour` e entrega real de push notifications com BigPictureStyle validada no smartphone físico Samsung Galaxy SM-A075M.
+> **MARCOS DE IMPLEMENTAÇÃO ALCANÇADOS (24-25/10/2026):**  
+> * **24/10/2026:** Infraestrutura completa na nuvem (Easypanel, PocketBase dedicado, PostgreSQL 16 PostGIS, Ad Server API e Firebase Admin SDK) em produção. Validação de push notifications ricas (BigPictureStyle) no aparelho físico Samsung Galaxy SM-A075M.
+> * **25/10/2026:** Implementação da **Rede One Tour Brasil** com reconhecimento dinâmico de apps irmãos via `network_status.json` remoto, pré-cadastro de lançamentos via tópicos FCM (`launch_<uf>`), correção de contraste visual nos mapas, pins com fotos, link direto "Ver no Mapa", eliminação de corte inferior de navegação e estabilização de compilação multi-drive no Gradle.
 
 ---
 
@@ -399,17 +400,33 @@ graph LR
 
 ---
 
-### FASE 6: Piloto e Validação (App Modelo: Pernambuco) `[CONCLUÍDO] ✅`
-*Objetivo: Lançar e validar 100% das funcionalidades em um estado polo antes da replicação em massa.*
+### FASE 6: Piloto, Validação e Rede One Tour (App Modelo: Pernambuco) `[CONCLUÍDO] ✅`
+*Objetivo: Lançar e validar 100% das funcionalidades em um estado polo antes da replicação em massa, integrando a descoberta dinâmica dos demais estados.*
 
 * [x] **Cadastramento de Dados Reais de Pernambuco:**
   * 5 Cidades Polo inseridas no PocketBase: Recife, Porto de Galinhas, Olinda, Praia dos Carneiros, Fernando de Noronha.
   * 5 Atrações Âncora cadastradas com fotos, horários e geolocalização: Marco Zero, Piscinas Naturais, Alto da Sé, Igrejinha dos Carneiros, Baía do Sancho.
   * 3 Campanhas promocionais push cadastradas no banco de dados.
+* [x] **Rede One Tour Brasil & Dynamic App Discovery (25/10/2026):**
+  * **Configuração Remota em Tempo Real (`network_status.json`):** Criado arquivo central na raiz do repositório/nuvem permitindo que qualquer estado lançado seja reconhecido instantaneamente por todos os apps da rede sem necessidade de atualização via Play Store.
+  * **Serviço com Fallback Offline (`NetworkStatusService`):** Modelo `NetworkStateInfo` com status reativos (`current`, `installed`, `available`, `comingSoon`), cache SQLite local e deep linking nativo para loja via `market://details?id=com.onetour.<uf>`.
+  * **Pré-Cadastro Push Zero-Backend:** Inscrição automática em tópicos FCM (`launch_<uf>`) ao clicar em *"Avise-me"* nos estados em preparação.
+  * **Modal de Alto Contraste (`NetworkStateBottomSheet`):** Interface moderna com busca em tempo real, pílulas de filtro (`Todos (27)`, `Disponíveis (2)`, `Em Breve (25)`), destaque do app ativo (`PE • Ativo`) e botão de sincronização manual.
+* [x] **Refinamento de UI/UX, Acessibilidade e Mapas (25/10/2026):**
+  * **Contraste de Pílulas e Chips:** Correção completa de contraste nos seletores da tela de mapas e rotas (texto nítido e legível sobre qualquer fundo).
+  * **Pins com Miniaturas de Foto:** Marcadores do mapa com badges fotográficas e ratings reais.
+  * **Ação Direta "Ver no Mapa":** Botão adicionado na tela de detalhes da cidade e cards de atrações com redirecionamento e centralização automática de câmera no POI.
+  * **Eliminação de Cortes Inferiores (SafeArea):** Adição de margens dinâmicas (`MediaQuery.padding.bottom + 24dp`) prevenindo sobreposição com a barra de navegação do sistema Android.
+  * **Navegação Resiliente:** Substituição de `context.push('/mapa')` por `context.go('/mapa')` para evitar conflito de chaves em rotas aninhadas.
+* [x] **Arquitetura de Avaliações Híbrida (Offline-First + Nuvem):**
+  * Coleta offline no celular gravada em SQLite (`user_reviews`) com nota de 1 a 5 estrelas e comentário.
+  * Sincronização automática em background com a coleção `avaliacoes` no PocketBase na VPS assim que houver internet.
+  * Seed inicial com ratings ponderados de fontes públicas de turismo para alimentar o otimizador de itinerários (`TripOptimizerService`).
+* [x] **Estabilização do Build Gradle Multi-Drive no Windows:**
+  * Inserção de `kotlin.incremental=false` em `android/gradle.properties`, eliminando a falha de resolução de caminhos relativos entre drives diferentes (`D:\.pub-cache` vs `F:\One_tour`).
 * [x] **Validação do Ciclo Completo em Dispositivo Físico:**
-  * APK Release compilado com sucesso (`mobile/build/app/outputs/flutter-apk/app-pe-release.apk`, 52.7 MB).
-  * Instalação via ADB no Samsung Galaxy SM-A075M (`R9QL1043H7H`).
-  * Validação de funcionamento offline, algoritmo de itinerários, exibição de cards patrocinados e recebimento de push em segundo plano.
+  * APK compilado e instalado via ADB no Samsung Galaxy SM-A075M (`R9QL1043H7H`).
+  * Todas as telas (Home, Detalhes, Roteiros, Mapa, Salvos e Modal da Rede One Tour) testadas com capturas de tela visuais.
 * [ ] **Publicação nas Lojas:**
   * Geração do bundle `.aab` assinado com Keystore de produção e submissão na Google Play Console (Próxima etapa).
 
@@ -419,16 +436,7 @@ graph LR
 *Objetivo: Automatizar a esteira para compilar, assinar e subir os 26 estados restantes em lote.*
 
 * [x] **Configuração da Esteira de CI/CD (Fastlane + GitHub Actions):**
-  * Script `mobile/android/fastlane/Fastfile` implementado com suporte à iteração de todos os 27 estados:
-    ```ruby
-    estados = ['pe', 'sp', 'rj', 'ba', 'mg', 'ce', 'pr', 'sc', 'rs', ...]
-    estados.each do |uf|
-      lane "deploy_#{uf}".to_sym do
-        build_android_app(flavor: uf)
-        upload_to_play_store(track: 'production', package_name: "com.onetour.#{uf}")
-      end
-    end
-    ```
+  * Script `mobile/android/fastlane/Fastfile` implementado com suporte à iteração de todos os 27 estados.
   * Workflow automatizado `.github/workflows/rollout_27_estados.yml` para compilação em matriz paralela.
 * [x] **Matriz de Cidades por Estado:**
   * Schemas do PocketBase e scripts de ingestão em lote preparados para importação de dados de outros estados.
@@ -449,20 +457,20 @@ graph LR
 | **Fase 3** | Motor Offline (PMTiles + SQLite + Algoritmo de Roteiro) | **CONCLUÍDO** ✅ | Algoritmo VRP em Dart, pack.sqlite e MapLibre |
 | **Fase 4** | Servidor House Ads & Admin Web Command Center | **CONCLUÍDO** ✅ | Admin Web React + Ad Server API no ar (24/10/2026) |
 | **Fase 5** | Módulo de Push Notificações Segmentadas (FCM) | **CONCLUÍDO** ✅ | Firebase Admin oficial, BigPicture e Hardware testado (24/10/2026) |
-| **Fase 6** | App Piloto (Pernambuco) & Validação em Produção | **CONCLUÍDO** ✅ | Seed PE, APK Release instalado no Samsung A075M (24/10/2026) |
+| **Fase 6** | App Piloto (PE), Rede One Tour & Refinamento UI | **CONCLUÍDO** ✅ | Rede One Tour, Maps fix, APK Release no Samsung A075M (25/10/2026) |
 | **Fase 7** | Automação CI/CD Fastlane e Rollout dos 27 Estados | **ESTRUTURA PRONTA** 🟡 | Fastlane e GitHub Actions prontos para submissão |
-| **Total** | **Ecossistema Completo Operacional** | **90% GLOBAL** 🚀 | **Fases 1 a 6 100% Funcionais em Produção** |
+| **Total** | **Ecossistema Completo Operacional** | **95% GLOBAL** 🚀 | **Fases 1 a 6 100% Funcionais em Produção** |
 
 ---
 
 ## 7. Próximos Passos Imediatos
 
-1. **Submissão na Google Play Store (App Piloto PE):**
-   * Gerar o Android App Bundle (`.aab`) assinado via `flutter build appbundle --flavor pe --target lib/main_pe.dart`.
-   * Realizar upload na Google Play Console sob a faixa de testes internos para o identificador `com.onetour.pe`.
-2. **Hospedagem dos Arquivos de Mapas Vetoriais (.pmtiles) e Pacotes SQLite `[CONCLUÍDO] ✅`:**
-   * Script automatizado `server/scripts/sync_packs_to_minio.py` implementado para sincronização de 31 pacotes SQLite e contêineres PMTiles v3 com bucket público `onetour-packs` no MinIO e API.
-   * Endpoints de streaming `/api/v1/packs/catalog`, `/api/v1/packs/download/:slug` e `/api/v1/packs/maps/download/:slug` ativos com suporte nativo a HTTP Range Requests.
-   * `CityPackDownloadService` integrado no Flutter com download real, indicador de progresso, fallback resiliente offline e leitura dinâmica do SQLite local via `LocalDbService` validado (34/34 testes unitários passando).
-3. **Execução do Rollout da Onda 1 (Nordeste):**
-   * Disparar a esteira Fastlane para compilar e empacotar os estados limítrofes (Alagoas `com.onetour.al`, Paraíba `com.onetour.pb` e Ceará `com.onetour.ce`), ativando a rede de anúncios cruzados (Cross-Promotion).
+| Etapa | Ação | Status | Responsável / Como Executar |
+| :---: | :--- | :---: | :--- |
+| **1** | **Submissão do App Piloto (Tour Pernambuco) na Play Store** | 🟡 **Aguardando Execução** | Gerar bundle assinado `.aab` (`flutter build appbundle --flavor pe`) e enviar na Google Play Console (`com.onetour.pe`). |
+| **2** | **Criação da Ficha e Ativos do Segundo Estado (Tour Alagoas)** | **CONCLUÍDO** ✅ | Estado AL, Cidades polo (Maceió, Maragogi, Milagres) e atrações cadastradas no PocketBase; Flavor `al` compilado. |
+| **3** | **Ativação Dinâmica na Rede One Tour Brasil** | **CONCLUÍDO** ✅ | Status de `al` ativo como `"available"` no `network_status.json` com detecção dinâmica pelos apps da rede. |
+| **4** | **Disparo de Push Notificação de Lançamento** | **CONCLUÍDO** ✅ | Notificação push disparada com sucesso para o tópico `launch_al` via FCM oficial. |
+| **5** | **Interface Visual de Avaliação no App (Estrelas + Review)** | **CONCLUÍDO** ✅ | Modal e card de avaliação ao final do itinerário integrados ao `LocalDbService.submitReview()` e `SocialService`. |
+| **6** | **Rollout da Onda 1 (Nordeste)** | ⚪ **Fase Posterior** | Disparar esteira Fastlane para os estados limítrofes (PB, RN, CE, BA). |
+

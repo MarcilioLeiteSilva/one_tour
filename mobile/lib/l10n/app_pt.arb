@@ -2,8 +2,8 @@
   "@@locale": "pt",
   "appTitle": "One Tour",
   "tabExplore": "Explorar",
-  "tabItineraries": "Roteiros",
-  "tabMap": "Mapa",
+  "tabItineraries": "Rotas",
+  "tabMap": "Mapas",
   "tabSaved": "Salvos",
   "searchPlaceholder": "Buscar cidades, praias, museus...",
   "topDestinations": "Cidades Polo em Destaque",
@@ -34,8 +34,8 @@
       "progress": { "type": "int" }
     }
   },
-  "createSmartTrip": "Montar Roteiro Inteligente",
-  "tripPlannerTitle": "Assistente de Roteirização",
+  "createSmartTrip": "Montar Rota Rápida",
+  "tripPlannerTitle": "Criar Rotas",
   "howManyDays": "Quantos dias você vai ficar?",
   "daysCount": "{count, plural, =1{1 dia} other{{count} dias}}",
   "@daysCount": {
@@ -58,7 +58,7 @@
   "interestGastronomy": "Gastronomia",
   "interestNature": "Ecoturismo",
   "interestNightlife": "Noite & Festas",
-  "btnGenerateTrip": "Gerar Roteiro Otimizado",
+  "btnGenerateTrip": "Gerar Rota Otimizada",
   "dayTitle": "Dia {day}",
   "@dayTitle": {
     "placeholders": {
@@ -81,7 +81,7 @@
     }
   },
   "viewOnMap": "Ver no Mapa",
-  "shareTrip": "Compartilhar Roteiro",
+  "shareTrip": "Compartilhar Rota",
   "likesCount": "{count} curtidas",
   "@likesCount": {
     "placeholders": {

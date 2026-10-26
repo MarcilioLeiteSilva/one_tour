@@ -9,6 +9,8 @@ import '../../features/trip_planner/presentation/trip_itinerary_screen.dart';
 import '../../features/map/presentation/map_screen.dart';
 import '../../features/saved/presentation/saved_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/shell/presentation/how_to_use_screen.dart';
+import '../../features/shell/presentation/settings_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorExploreKey = GlobalKey<NavigatorState>();
@@ -52,7 +54,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/mapa',
-                builder: (context, state) => const MapScreen(),
+                builder: (context, state) {
+                  final filter = state.uri.queryParameters['filter'];
+                  final attractionId = state.uri.queryParameters['attractionId'];
+                  final lat = double.tryParse(state.uri.queryParameters['lat'] ?? '');
+                  final lon = double.tryParse(state.uri.queryParameters['lon'] ?? '');
+                  return MapScreen(
+                    initialFilter: filter,
+                    initialAttractionId: attractionId,
+                    initialLat: lat,
+                    initialLon: lon,
+                  );
+                },
               ),
             ],
           ),
@@ -90,6 +103,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/notificacoes',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/como-usar',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const HowToUseScreen(),
+      ),
+      GoRoute(
+        path: '/configuracoes',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

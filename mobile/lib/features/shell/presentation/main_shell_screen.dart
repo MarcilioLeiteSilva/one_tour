@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'app_drawer.dart';
 
 class MainShellScreen extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
@@ -24,6 +25,7 @@ class MainShellScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      drawer: const AppDrawer(),
       body: navigationShell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
