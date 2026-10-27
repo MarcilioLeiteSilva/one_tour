@@ -253,6 +253,7 @@ export const App: React.FC = () => {
             isLoading={isLoading}
             onRefresh={loadData}
             selectedUf={selectedUf}
+            onNotify={showToast}
           />
         )}
 

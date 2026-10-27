@@ -10,10 +10,30 @@ export interface OverviewStats {
 export interface AdPerformanceItem {
   ad_id: string;
   uf: string;
-  position: 'home_card' | 'attraction_banner' | 'interstitial';
+  position: 'home_card' | 'attraction_banner' | 'itinerary_footer' | 'interstitial';
   impressions: number;
   clicks: number;
   ctr: number;
+}
+
+export interface HouseAdCampaign {
+  id: string;
+  type: 'direct_sponsor' | 'cross_promotion';
+  title: string;
+  subtitle: string;
+  tag: string;
+  image_url: string;
+  action_label: string;
+  target_url: string;
+  target_uf: string;
+  target_cities: string[];
+  position: 'home_card' | 'attraction_banner' | 'itinerary_footer' | 'interstitial';
+  priority: number;
+  active: boolean;
+  start_date?: string;
+  end_date?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface PlaceReviewItem {

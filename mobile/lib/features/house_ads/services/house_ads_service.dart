@@ -117,6 +117,32 @@ class HouseAdsService {
       targetUf: 'PE',
       position: 'attraction_banner',
     ),
+    // 6. Cross-promotion em Alagoas: Tour Pernambuco
+    HouseAdModel(
+      id: 'cross_pe_from_al',
+      type: 'cross_promotion',
+      title: 'Conheça o App Tour Pernambuco',
+      subtitle: 'Recife Antigo, Olinda e Porto de Galinhas a poucas horas de Maceió.',
+      tag: 'REDE ONE TOUR • VIZINHO',
+      imageUrl: 'https://images.unsplash.com/photo-1577039508937-99c3b639ba77?auto=format&fit=crop&w=800&q=80',
+      actionLabel: 'Baixar App Grátis',
+      targetUrl: 'https://onetour.app/pe',
+      targetUf: 'AL',
+      position: 'attraction_banner',
+    ),
+    // 7. Patrocinador Alagoas: Catamarã Maragogi
+    HouseAdModel(
+      id: 'sponsor_maragogi_al',
+      type: 'direct_sponsor',
+      title: 'Catamarã para as Galés de Maragogi',
+      subtitle: 'Piscinas naturais de corais com águas mornas, máscara de mergulho e fotos sub.',
+      tag: 'EXPERIÊNCIA RECOMENDADA',
+      imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
+      actionLabel: 'Reservar Passeio',
+      targetUrl: 'https://onetour.app/al',
+      targetUf: 'AL',
+      position: 'home_card',
+    ),
   ];
 
   /// Get ads filtered by UF, city and position (100% offline resilient)
@@ -146,7 +172,7 @@ class HouseAdsService {
               id: m['id'] ?? 'ad_pb',
               type: 'direct_sponsor',
               title: m['titulo'] ?? 'Parceiro One Tour',
-              subtitle: 'Experiência exclusiva para viajantes em Pernambuco.',
+              subtitle: 'Experiência exclusiva para viajantes.',
               tag: 'PATROCINADOR OFICIAL',
               imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
               actionLabel: 'Saiba Mais',
@@ -169,14 +195,22 @@ class HouseAdsService {
       debugPrint('ℹ️ [HouseAdsService] Usando catálogo offline de anúncios ($e)');
     }
 
-    // 2. Fallback to curated offline catalog
+    // 2. Fallback to curated offline catalog for UF
     final matches = _offlineCatalog.where((ad) {
       if (ad.targetUf != normalizedUf) return false;
       if (position != null && ad.position != position) return false;
       return true;
     }).toList();
 
-    return matches;
+    if (matches.isNotEmpty) {
+      return matches;
+    }
+
+    // 3. Fallback genérico para cross-promotion da rede se não houver ad regional específico
+    return _offlineCatalog.where((ad) {
+      if (position != null && ad.position != position) return false;
+      return true;
+    }).toList();
   }
 
   /// Track impression (offline-first telemetry)

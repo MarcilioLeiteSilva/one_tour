@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/ads/admob_service.dart';
 import 'core/config/app_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -35,6 +36,11 @@ class _OneTourAppState extends ConsumerState<OneTourApp> {
         ref.invalidate(curatedAttractionsProvider);
       };
       SocialService.instance.start(uf: config.uf);
+
+      // 3. Google Mobile Ads (AdMob)
+      AdMobService.instance.initialize().then((_) {
+        AdMobService.instance.preloadInterstitial(config.uf);
+      });
     });
   }
 

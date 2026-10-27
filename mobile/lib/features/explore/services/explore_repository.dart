@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
+import '../../../core/config/app_flavor.dart';
 import '../../social/domain/place_stats.dart';
 import '../../social/services/social_service.dart';
 import '../../trip_planner/services/local_db_service.dart';
@@ -60,32 +61,96 @@ class ExploreRepository {
 
     // Fallback: cidades do catálogo local com status de download real do SQLite
     final downloadedSet = await LocalDbService.instance.getDownloadedCities();
-    return MockPeData.cities.map((c) {
-      return CityModel(
-        id: c.id,
-        name: c.name,
-        tag: c.tag,
-        imageUrl: c.imageUrl,
-        description: c.description,
-        attractionsCount: c.attractionsCount,
-        packageSize: c.packageSize,
-        isDownloaded: downloadedSet.contains(c.id),
-      );
-    }).toList();
+
+    if (normalizedUf == 'AL') {
+      return [
+        CityModel(
+          id: 'maceio',
+          name: 'Maceió',
+          tag: 'Caribe Brasileiro & Orla das Águas Claras',
+          imageUrl: _getCityImageUrl('maceio'),
+          description: 'Capital de praias urbanas cinematográficas (Pajuçara, Ponta Verde), piscinas naturais e gastronomia de frutos do mar.',
+          attractionsCount: 20,
+          packageSize: '11 MB',
+          isDownloaded: downloadedSet.contains('maceio') || downloadedSet.contains('al'),
+        ),
+        CityModel(
+          id: 'maragogi',
+          name: 'Maragogi',
+          tag: 'Galés & Piscinas Naturais',
+          imageUrl: _getCityImageUrl('maragogi'),
+          description: 'O coração da Costa dos Corais, célebre pelas Galés de águas mornas e translúcidas em alto mar.',
+          attractionsCount: 16,
+          packageSize: '8 MB',
+          isDownloaded: downloadedSet.contains('maragogi'),
+        ),
+        CityModel(
+          id: 'milagres',
+          name: 'São Miguel dos Milagres',
+          tag: 'Rota Ecológica & Mar de Esmeralda',
+          imageUrl: _getCityImageUrl('milagres'),
+          description: 'Charme rústico, praias desertas paradisíacas (Praia do Toque), coqueirais infinitos e santuário do peixe-boi.',
+          attractionsCount: 12,
+          packageSize: '6 MB',
+          isDownloaded: downloadedSet.contains('milagres'),
+        ),
+      ];
+    } else if (normalizedUf == 'PE') {
+      return MockPeData.cities.map((c) {
+        return CityModel(
+          id: c.id,
+          name: c.name,
+          tag: c.tag,
+          imageUrl: c.imageUrl,
+          description: c.description,
+          attractionsCount: c.attractionsCount,
+          packageSize: c.packageSize,
+          isDownloaded: downloadedSet.contains(c.id),
+        );
+      }).toList();
+    } else {
+      final flavorConfig = FlavorConfig.of(AppFlavor.fromString(normalizedUf));
+      final slug = flavorConfig.capital.toLowerCase().replaceAll(' ', '_');
+      return [
+        CityModel(
+          id: slug,
+          name: flavorConfig.capital,
+          tag: flavorConfig.slogan,
+          imageUrl: _getCityImageUrl(slug),
+          description: '${flavorConfig.appName}: explore os principais pontos turísticos, rotas e gastronomia de ${flavorConfig.stateName}.',
+          attractionsCount: 16,
+          packageSize: '10 MB',
+          isDownloaded: downloadedSet.contains(slug) || downloadedSet.contains(normalizedUf.toLowerCase()),
+        ),
+      ];
+    }
   }
 
   /// Retrieve attractions for state/city (from PocketBase with offline fallback)
   Future<List<AttractionModel>> getAttractions({String uf = 'PE', String? citySlug}) async {
     final normalizedUf = uf.toUpperCase().trim();
 
-    // 1. Sempre carrega catálogo curado local completo (Recife, Olinda, Porto, Carneiros, Noronha)
-    final localCatalog = (citySlug != null && citySlug.isNotEmpty)
-        ? await MockPeData.getAttractionsForCity(citySlug)
-        : await MockPeData.getAllCuratedAttractions();
+    // 1. Carrega catálogo local curado correspondente ao estado
+    final Map<String, AttractionModel> mergedMap = {};
 
-    final Map<String, AttractionModel> mergedMap = {
-      for (final att in localCatalog) att.id: att,
-    };
+    if (normalizedUf == 'PE') {
+      final localCatalog = (citySlug != null && citySlug.isNotEmpty)
+          ? await MockPeData.getAttractionsForCity(citySlug)
+          : await MockPeData.getAllCuratedAttractions();
+      for (final att in localCatalog) {
+        mergedMap[att.id] = att;
+      }
+    } else if (normalizedUf == 'AL') {
+      final alCatalog = await MockPeData.getAttractionsForAlagoas(citySlug: citySlug);
+      for (final att in alCatalog) {
+        mergedMap[att.id] = att;
+      }
+    } else {
+      final stateCatalog = await MockPeData.getAttractionsForCity(citySlug ?? normalizedUf.toLowerCase());
+      for (final att in stateCatalog) {
+        mergedMap[att.id] = att;
+      }
+    }
 
     // 2. Mescla com eventuais atualizações vindas da VPS PocketBase
     try {
@@ -168,6 +233,20 @@ class ExploreRepository {
         return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80';
       case 'noronha':
         return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80';
+      case 'maceio':
+        return 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=800&q=80';
+      case 'maragogi':
+        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80';
+      case 'milagres':
+        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+      case 'salvador':
+        return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+      case 'fortaleza':
+        return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80';
+      case 'natal':
+        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+      case 'joao_pessoa':
+        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80';
       case 'recife':
       default:
         return 'https://images.unsplash.com/photo-1577039508937-99c3b639ba77?auto=format&fit=crop&w=800&q=80';
@@ -184,6 +263,18 @@ class ExploreRepository {
         return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80';
       case 'baia_do_sancho':
         return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80';
+      case 'piscinas_pajucara':
+      case 'praia_pajucara':
+        return 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=800&q=80';
+      case 'farol_ponta_verde':
+        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+      case 'praia_do_frances':
+      case 'praia_frances':
+        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80';
+      case 'gales_maragogi':
+        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80';
+      case 'praia_do_toque':
+        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
       case 'marco_zero':
       default:
         return 'https://images.unsplash.com/photo-1680788842764-b5c9bc78ce59?auto=format&fit=crop&w=800&q=80';

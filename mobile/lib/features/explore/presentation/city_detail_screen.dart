@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/ads/admob_service.dart';
+import '../../../core/ads/hybrid_ad_banner.dart';
 import '../../../core/config/app_config.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/mock_pe_data.dart';
@@ -38,13 +40,34 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
 
   Future<void> _loadCityData() async {
     final isDl = await LocalDbService.instance.isCityDownloaded(widget.cityId);
-    final atts = await MockPeData.getAttractionsForCity(widget.cityId);
+    final uf = ref.read(flavorConfigProvider).uf;
+    final atts = await ExploreRepository.instance.getAttractions(
+      uf: uf,
+      citySlug: widget.cityId,
+    );
     if (mounted) {
       setState(() {
         _isDownloaded = isDl;
         _attractions = atts;
       });
     }
+  }
+
+  Future<void> _handleDownloadClick() async {
+    final uf = ref.read(flavorConfigProvider).uf;
+
+    // Tenta exibir anúncio recompensado antes do download
+    // Se estiver offline ou falhar, prossegue imediatamente para o download
+    await ref.read(adMobServiceProvider).showRewarded(
+      uf: uf,
+      onRewarded: (reward) {
+        debugPrint('🎁 [CityDetailScreen] Anúncio recompensado assistido com sucesso.');
+        _startDownload();
+      },
+      onFailed: () {
+        _startDownload();
+      },
+    );
   }
 
   Future<void> _startDownload() async {
@@ -71,8 +94,9 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
 
       if (success) {
         // Recarrega as atrações para refletir os dados recém-baixados
+        final uf = ref.read(flavorConfigProvider).uf;
         final freshAtts = await ExploreRepository.instance.getAttractions(
-          uf: 'PE',
+          uf: uf,
           citySlug: widget.cityId,
         );
         if (mounted) {
@@ -126,10 +150,21 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
     final config = ref.watch(flavorConfigProvider);
     final theme = Theme.of(context);
 
-    // Buscar dados da cidade
-    final city = MockPeData.cities.firstWhere(
+    // Buscar dados da cidade via provider ou fallback resiliente
+    final citiesAsync = ref.watch(citiesProvider);
+    final cityFromProvider = citiesAsync.value?.where((c) => c.id == widget.cityId).firstOrNull;
+    final city = cityFromProvider ?? MockPeData.cities.firstWhere(
       (c) => c.id == widget.cityId,
-      orElse: () => MockPeData.cities.first,
+      orElse: () => CityModel(
+        id: widget.cityId,
+        name: MockPeData.cityNameFromSlug(widget.cityId),
+        tag: 'Destino em ${config.stateName}',
+        imageUrl: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=800&q=80',
+        description: 'Explore as melhores atrações e passeios em ${MockPeData.cityNameFromSlug(widget.cityId)}.',
+        attractionsCount: _attractions.length,
+        packageSize: '10 MB',
+        isDownloaded: _isDownloaded,
+      ),
     );
 
     final cityAttractions = _attractions.isNotEmpty
@@ -264,7 +299,7 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                   backgroundColor: config.primaryColor,
                                 ),
-                                onPressed: _isDownloading ? null : _startDownload,
+                                onPressed: _isDownloading ? null : _handleDownloadClick,
                                 child: Text(_isDownloading ? '$_downloadProgress%' : 'Baixar'),
                               )
                             else
@@ -286,30 +321,9 @@ class _CityDetailScreenState extends ConsumerState<CityDetailScreen> {
 
                       const SizedBox(height: 24),
 
-                      // Destaque Patrocinado / House Ads Local
-                      Consumer(
-                        builder: (context, ref, _) {
-                          final adsAsync = ref.watch(
-                            houseAdsByPositionProvider(
-                              HouseAdQuery(
-                                uf: config.flavor.name.toUpperCase(),
-                                city: city.id,
-                                position: 'home_card',
-                              ),
-                            ),
-                          );
-                          return adsAsync.when(
-                            data: (ads) => ads.isNotEmpty
-                                ? Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: HouseAdTopCard(ad: ads.first),
-                                  )
-                                : const SizedBox.shrink(),
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, __) => const SizedBox.shrink(),
-                          );
-                        },
-                      ),
+                      // Bloco Híbrido: AdMob Banner com Fallback House Ads
+                      const HybridAdBanner(position: 'home_card'),
+                      const SizedBox(height: 16),
 
                       // Lista de Atrações na Cidade
                       Row(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/ads/admob_service.dart';
 import '../../../core/config/app_config.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../explore/presentation/explore_controller.dart';
 import '../domain/trip_request.dart';
 import 'trip_planner_controller.dart';
 
@@ -26,7 +28,7 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
   @override
   void initState() {
     super.initState();
-    _selectedCity = widget.cityName.isNotEmpty ? widget.cityName : 'Recife';
+    _selectedCity = widget.cityName;
   }
 
   @override
@@ -35,6 +37,12 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
     final config = ref.watch(flavorConfigProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    final citiesAsync = ref.watch(citiesProvider);
+    final citiesList = citiesAsync.value?.map((c) => c.name).toList() ?? [config.capital];
+    if (_selectedCity.isEmpty || (!citiesList.any((c) => c.toLowerCase() == _selectedCity.toLowerCase()) && widget.cityName.isEmpty)) {
+      _selectedCity = citiesList.first;
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -105,13 +113,9 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: [
-                  _buildCityChip('Recife', Icons.location_city, config),
-                  _buildCityChip('Porto de Galinhas', Icons.beach_access, config),
-                  _buildCityChip('Olinda', Icons.account_balance, config),
-                  _buildCityChip('Praia dos Carneiros', Icons.sailing, config),
-                  _buildCityChip('Fernando de Noronha', Icons.eco, config),
-                ],
+                children: citiesList.map((city) {
+                  return _buildCityChip(city, Icons.location_on_rounded, config);
+                }).toList(),
               ),
             ),
 
@@ -345,7 +349,14 @@ class _TripWizardModalState extends ConsumerState<TripWizardModal> {
                   Navigator.pop(context);
                   final plan = await ref.read(currentTripPlanProvider.notifier).generateTrip(request);
                   if (context.mounted && plan != null) {
-                    context.push('/roteiro/${plan.id}');
+                    ref.read(adMobServiceProvider).showInterstitial(
+                          uf: config.uf,
+                          onDismissed: () {
+                            if (context.mounted) {
+                              context.push('/roteiro/${plan.id}');
+                            }
+                          },
+                        );
                   }
                 },
               ),

@@ -1,6 +1,7 @@
 import {
   OverviewStats,
   AdPerformanceItem,
+  HouseAdCampaign,
   PlaceReviewItem,
   PlaceStatsItem,
   PbCityItem,
@@ -93,6 +94,45 @@ export async function fetchAdPerformance(days: number = 30): Promise<AdPerforman
     `/api/v1/admin/ads/performance?days=${days}`
   );
   return res.rows;
+}
+
+export async function fetchCampaigns(uf?: string, position?: string): Promise<HouseAdCampaign[]> {
+  const params = new URLSearchParams();
+  if (uf && uf !== 'ALL') params.set('uf', uf);
+  if (position && position !== 'all') params.set('position', position);
+  const q = params.toString() ? `?${params.toString()}` : '';
+  const res = await requestApi<{ success: boolean; data: HouseAdCampaign[] }>(`/api/v1/admin/campaigns${q}`);
+  return res.data || [];
+}
+
+export async function createCampaign(campaign: Partial<HouseAdCampaign>): Promise<HouseAdCampaign> {
+  const res = await requestApi<{ success: boolean; data: HouseAdCampaign }>('/api/v1/admin/campaigns', {
+    method: 'POST',
+    body: JSON.stringify(campaign),
+  });
+  return res.data;
+}
+
+export async function updateCampaign(id: string, campaign: Partial<HouseAdCampaign>): Promise<HouseAdCampaign> {
+  const res = await requestApi<{ success: boolean; data: HouseAdCampaign }>(`/api/v1/admin/campaigns/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(campaign),
+  });
+  return res.data;
+}
+
+export async function toggleCampaignActive(id: string, active: boolean): Promise<HouseAdCampaign> {
+  const res = await requestApi<{ success: boolean; data: HouseAdCampaign }>(`/api/v1/admin/campaigns/${encodeURIComponent(id)}/toggle`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  });
+  return res.data;
+}
+
+export async function deleteCampaign(id: string): Promise<void> {
+  await requestApi(`/api/v1/admin/campaigns/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
 }
 
 export async function fetchReviews(uf: string = 'PE', placeId?: string): Promise<PlaceReviewItem[]> {

@@ -148,3 +148,212 @@ adminRouter.post(
     });
   }),
 );
+
+// ---------------------------------------------------------------------------
+// Gerenciamento de Campanhas Dinâmicas House Ads
+// ---------------------------------------------------------------------------
+
+/** GET /api/v1/admin/campaigns — lista todas as campanhas. */
+adminRouter.get(
+  '/campaigns',
+  asyncHandler(async (req: Request, res: Response) => {
+    const uf = req.query.uf ? String(req.query.uf).toUpperCase() : undefined;
+    const position = req.query.position ? String(req.query.position) : undefined;
+
+    let sql = 'SELECT * FROM house_ad_campaigns WHERE 1=1';
+    const params: any[] = [];
+    if (uf && uf !== 'ALL') {
+      params.push(uf);
+      sql += ` AND (target_uf = $${params.length} OR target_uf = 'ALL')`;
+    }
+    if (position && position !== 'all') {
+      params.push(position);
+      sql += ` AND position = $${params.length}`;
+    }
+    sql += ' ORDER BY priority DESC, created_at DESC';
+
+    const result = await query(sql, params);
+    res.json({ success: true, count: result.rowCount, data: result.rows });
+  }),
+);
+
+/** POST /api/v1/admin/campaigns — cria nova campanha. */
+adminRouter.post(
+  '/campaigns',
+  asyncHandler(async (req: Request, res: Response) => {
+    const {
+      id,
+      type = 'direct_sponsor',
+      title,
+      subtitle = '',
+      tag = 'PATROCINADO',
+      image_url,
+      action_label = 'Saiba Mais',
+      target_url,
+      target_uf,
+      target_cities = [],
+      position,
+      priority = 10,
+      active = true,
+      start_date = new Date(),
+      end_date = null,
+    } = req.body || {};
+
+    if (!title || !image_url || !target_url || !target_uf || !position) {
+      res.status(400).json({ error: 'title, image_url, target_url, target_uf and position are required' });
+      return;
+    }
+
+    const campaignId =
+      id && String(id).trim()
+        ? String(id).trim()
+        : `ad_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+    const result = await query(
+      `INSERT INTO house_ad_campaigns
+       (id, type, title, subtitle, tag, image_url, action_label, target_url, target_uf, target_cities, position, priority, active, start_date, end_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       ON CONFLICT (id) DO UPDATE SET
+         type = EXCLUDED.type,
+         title = EXCLUDED.title,
+         subtitle = EXCLUDED.subtitle,
+         tag = EXCLUDED.tag,
+         image_url = EXCLUDED.image_url,
+         action_label = EXCLUDED.action_label,
+         target_url = EXCLUDED.target_url,
+         target_uf = EXCLUDED.target_uf,
+         target_cities = EXCLUDED.target_cities,
+         position = EXCLUDED.position,
+         priority = EXCLUDED.priority,
+         active = EXCLUDED.active,
+         start_date = EXCLUDED.start_date,
+         end_date = EXCLUDED.end_date,
+         updated_at = NOW()
+       RETURNING *`,
+      [
+        campaignId,
+        type,
+        title,
+        subtitle,
+        tag,
+        image_url,
+        action_label,
+        target_url,
+        String(target_uf).toUpperCase(),
+        Array.isArray(target_cities) ? target_cities : [],
+        position,
+        Number(priority) || 10,
+        Boolean(active),
+        start_date,
+        end_date,
+      ],
+    );
+
+    res.json({ success: true, data: result.rows[0] });
+  }),
+);
+
+/** PUT /api/v1/admin/campaigns/:id — atualiza campanha existente. */
+adminRouter.put(
+  '/campaigns/:id',
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const {
+      type,
+      title,
+      subtitle,
+      tag,
+      image_url,
+      action_label,
+      target_url,
+      target_uf,
+      target_cities,
+      position,
+      priority,
+      active,
+      start_date,
+      end_date,
+    } = req.body || {};
+
+    const result = await query(
+      `UPDATE house_ad_campaigns SET
+         type = COALESCE($2, type),
+         title = COALESCE($3, title),
+         subtitle = COALESCE($4, subtitle),
+         tag = COALESCE($5, tag),
+         image_url = COALESCE($6, image_url),
+         action_label = COALESCE($7, action_label),
+         target_url = COALESCE($8, target_url),
+         target_uf = COALESCE($9, target_uf),
+         target_cities = COALESCE($10, target_cities),
+         position = COALESCE($11, position),
+         priority = COALESCE($12, priority),
+         active = COALESCE($13, active),
+         start_date = COALESCE($14, start_date),
+         end_date = $15,
+         updated_at = NOW()
+       WHERE id = $1
+       RETURNING *`,
+      [
+        id,
+        type,
+        title,
+        subtitle,
+        tag,
+        image_url,
+        action_label,
+        target_url,
+        target_uf ? String(target_uf).toUpperCase() : undefined,
+        Array.isArray(target_cities) ? target_cities : undefined,
+        position,
+        priority !== undefined ? Number(priority) : undefined,
+        active !== undefined ? Boolean(active) : undefined,
+        start_date,
+        end_date,
+      ],
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'campaign not found' });
+      return;
+    }
+
+    res.json({ success: true, data: result.rows[0] });
+  }),
+);
+
+/** PATCH /api/v1/admin/campaigns/:id/toggle — ativa ou pausa a campanha. */
+adminRouter.patch(
+  '/campaigns/:id/toggle',
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const { active } = req.body || {};
+    if (typeof active !== 'boolean') {
+      res.status(400).json({ error: 'active (boolean) is required' });
+      return;
+    }
+    const result = await query(
+      'UPDATE house_ad_campaigns SET active = $2, updated_at = NOW() WHERE id = $1 RETURNING *',
+      [id, active],
+    );
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'campaign not found' });
+      return;
+    }
+    res.json({ success: true, data: result.rows[0] });
+  }),
+);
+
+/** DELETE /api/v1/admin/campaigns/:id — remove a campanha. */
+adminRouter.delete(
+  '/campaigns/:id',
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const result = await query('DELETE FROM house_ad_campaigns WHERE id = $1 RETURNING id', [id]);
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'campaign not found' });
+      return;
+    }
+    res.json({ success: true, deleted: id });
+  }),
+);

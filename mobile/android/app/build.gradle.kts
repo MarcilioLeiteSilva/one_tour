@@ -27,6 +27,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         resValue("string", "app_name", "One Tour")
+        manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
     }
 
     flavorDimensions += "state"
@@ -60,11 +61,17 @@ android {
             "ap" to "Tour Amapá",
             "rr" to "Tour Roraima"
         )
+        val admobAppIds = mapOf(
+            "pe" to "ca-app-pub-5133242303791049~4445477549"
+        )
+        val defaultAdmobAppId = "ca-app-pub-3940256099942544~3347511713" // Google sample test App ID
+
         states.forEach { (uf, title) ->
             create(uf) {
                 dimension = "state"
                 applicationId = "com.onetour.$uf"
                 resValue("string", "app_name", title)
+                manifestPlaceholders["admobAppId"] = admobAppIds[uf] ?: defaultAdmobAppId
             }
         }
     }

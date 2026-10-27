@@ -248,7 +248,8 @@ class MockPeData {
   ];
 
   static String cityNameFromSlug(String slug) {
-    switch (slug.toLowerCase().trim()) {
+    final s = slug.toLowerCase().trim();
+    switch (s) {
       case 'porto_de_galinhas':
         return 'Porto de Galinhas';
       case 'carneiros':
@@ -257,9 +258,36 @@ class MockPeData {
         return 'Fernando de Noronha';
       case 'olinda':
         return 'Olinda';
+      case 'maceio':
+        return 'Maceió';
+      case 'maragogi':
+        return 'Maragogi';
+      case 'milagres':
+        return 'São Miguel dos Milagres';
+      case 'salvador':
+        return 'Salvador';
+      case 'fortaleza':
+        return 'Fortaleza';
+      case 'natal':
+        return 'Natal';
+      case 'joao_pessoa':
+        return 'João Pessoa';
+      case 'aracaju':
+        return 'Aracaju';
+      case 'sao_luis':
+        return 'São Luís';
+      case 'teresina':
+        return 'Teresina';
       case 'recife':
-      default:
         return 'Recife';
+      default:
+        if (s.isNotEmpty) {
+          return s
+              .split('_')
+              .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+              .join(' ');
+        }
+        return 'Cidade';
     }
   }
 
@@ -267,6 +295,13 @@ class MockPeData {
   static Future<List<AttractionModel>> getAttractionsForCity(String citySlug) async {
     final places = await LocalDbService.instance.getPlacesForCity(citySlug);
     return places.map((p) => p.toAttractionModel()).toList();
+  }
+
+  /// Retrieve curated attractions for Alagoas
+  static Future<List<AttractionModel>> getAttractionsForAlagoas({String? citySlug}) async {
+    final maceio = await getAttractionsForCity('maceio');
+    if (citySlug == 'maceio') return maceio;
+    return maceio;
   }
 
   /// Retrieve all curated attractions across all polo destinations

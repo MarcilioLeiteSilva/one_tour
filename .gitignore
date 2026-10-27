@@ -59,3 +59,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Builds, APKs, Screenshots de Lojas e Chaves
+APK-*/
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# Relatórios e Documentação Interna de Negócio
+relatorios/
+

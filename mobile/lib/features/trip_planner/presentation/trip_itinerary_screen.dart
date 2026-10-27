@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/ads/admob_service.dart';
+import '../../../core/ads/hybrid_ad_banner.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../l10n/app_localizations.dart';
@@ -9,8 +11,6 @@ import '../domain/trip_request.dart';
 import '../services/local_db_service.dart';
 import '../../social/services/social_service.dart';
 import 'trip_planner_controller.dart';
-import '../../house_ads/presentation/house_ad_interstitial_modal.dart';
-import '../../house_ads/services/house_ads_service.dart';
 
 class TripItineraryScreen extends ConsumerStatefulWidget {
   final String tripId;
@@ -31,6 +31,8 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ensurePlanLoaded();
+      final uf = ref.read(flavorConfigProvider).uf;
+      ref.read(adMobServiceProvider).preloadInterstitial(uf);
     });
   }
 
@@ -119,20 +121,19 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
               ),
               IconButton(
                 icon: const Icon(Icons.share_outlined),
-                onPressed: () async {
-                  final ads = await ref.read(houseAdsServiceProvider).getAds(
-                        uf: config.flavor.name.toUpperCase(),
-                        position: 'interstitial',
+                tooltip: 'Compartilhar Roteiro',
+                onPressed: () {
+                  ref.read(adMobServiceProvider).showInterstitial(
+                    uf: config.uf,
+                    onDismissed: () {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Card do roteiro gerado! Pronto para compartilhar.'),
+                        ),
                       );
-                  if (context.mounted && ads.isNotEmpty) {
-                    HouseAdInterstitialModal.show(context, ads.first);
-                  } else if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Card do roteiro gerado! Pronto para compartilhar.'),
-                      ),
-                    );
-                  }
+                    },
+                  );
                 },
               ),
               IconButton(
@@ -169,6 +170,10 @@ class _TripItineraryScreenState extends ConsumerState<TripItineraryScreen>
                 isLastDay: dayIndex == plan.days.length - 1,
               );
             }).toList(),
+          ),
+          bottomNavigationBar: const SafeArea(
+            top: false,
+            child: HybridAdBanner(position: 'itinerary_footer'),
           ),
         );
       },

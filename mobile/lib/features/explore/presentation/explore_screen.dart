@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/ads/hybrid_ad_banner.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/config/app_flavor.dart';
 import '../../../l10n/app_localizations.dart';
@@ -348,26 +349,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Bloco Nativo House Ads (Monetização e Cross-Promotion da Rede)
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final adsAsync = ref.watch(
-                        houseAdsByPositionProvider(
-                          HouseAdQuery(
-                            uf: config.flavor.name.toUpperCase(),
-                            position: 'attraction_banner',
-                          ),
-                        ),
-                      );
-                      return adsAsync.when(
-                        data: (ads) => ads.isNotEmpty
-                            ? HouseAdBanner(ad: ads.first)
-                            : const SizedBox.shrink(),
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
-                      );
-                    },
-                  ),
+                  // Bloco Híbrido: AdMob Banner com Fallback House Ads
+                  const HybridAdBanner(position: 'attraction_banner'),
 
                   const SizedBox(height: 24),
 
