@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
 import '../../social/services/social_service.dart';
 import '../domain/house_ad_model.dart';
+import 'ad_image_cache_service.dart';
 
 final houseAdsServiceProvider = Provider<HouseAdsService>((ref) {
   return HouseAdsService.instance;
@@ -153,7 +154,52 @@ class HouseAdsService {
   }) async {
     final normalizedUf = uf.toUpperCase();
 
-    // 1. Try fetching live campaigns from PocketBase VPS
+    // 1. Prioridade: busca campanhas dinâmicas da API House Ads (PostgreSQL VPS)
+    try {
+      final queryParams = <String, String>{
+        'uf': normalizedUf,
+        if (city != null && city.isNotEmpty) 'cidade': city,
+        if (position != null && position.isNotEmpty) 'posicao': position,
+      };
+      final uri = Uri.parse('$kApiBaseUrl/api/v1/ads').replace(queryParameters: queryParams);
+      final response = await _client.get(uri).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        final adsList = data['ads'] as List<dynamic>? ?? [];
+
+        if (adsList.isNotEmpty) {
+          final liveAds = adsList.map((item) {
+            final m = item as Map<String, dynamic>;
+            return HouseAdModel(
+              id: m['id'] ?? 'ad_vps',
+              type: m['type'] ?? 'direct_sponsor',
+              title: m['title'] ?? 'Parceiro One Tour',
+              subtitle: m['subtitle'] ?? 'Experiência exclusiva para viajantes.',
+              tag: m['tag'] ?? 'PATROCINADOR OFICIAL',
+              imageUrl: m['imageUrl'] ?? '',
+              actionLabel: m['actionLabel'] ?? 'Saiba Mais',
+              targetUrl: m['targetUrl'] ?? 'https://onetour.app',
+              targetUf: m['targetUf'] ?? normalizedUf,
+              position: m['position'] ?? (position ?? 'home_card'),
+            );
+          }).toList();
+
+          if (liveAds.isNotEmpty) {
+            debugPrint('🌐 [HouseAdsService] Carregadas ${liveAds.length} campanhas ativas do House Ads Server!');
+            // Dispara pré-carregamento automático de imagens para o armazenamento local permanente
+            AdImageCacheService.instance.prefetchImages(
+              liveAds.map((a) => a.imageUrl).where((url) => url.isNotEmpty).toList(),
+            );
+            return liveAds;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('ℹ️ [HouseAdsService] Tentando fallback secundário ($e)');
+    }
+
+    // 2. Fallback secundário: PocketBase VPS
     try {
       final url = Uri.parse(
         '$kBackendBaseUrl/api/collections/campanhas_ads/records?filter=(ativo=true&&uf_alvo="$normalizedUf")',
@@ -186,7 +232,10 @@ class HouseAdsService {
           }).toList();
 
           if (liveAds.isNotEmpty) {
-            debugPrint('🌐 [HouseAdsService] Carregadas ${liveAds.length} campanhas ativas da VPS!');
+            debugPrint('🌐 [HouseAdsService] Carregadas ${liveAds.length} campanhas ativas do PocketBase!');
+            AdImageCacheService.instance.prefetchImages(
+              liveAds.map((a) => a.imageUrl).where((url) => url.isNotEmpty).toList(),
+            );
             return liveAds;
           }
         }

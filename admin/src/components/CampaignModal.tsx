@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Layers, MessageCircle, AlertCircle, Check } from 'lucide-react';
+import { X, Layers, MessageCircle, AlertCircle, Check, UploadCloud, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { HouseAdCampaign } from '../types';
+import { uploadAdImage } from '../services/api';
 
 interface CampaignModalProps {
   isOpen: boolean;
@@ -39,6 +40,11 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({
   const [showWhatsAppHelper, setShowWhatsAppHelper] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Upload de Mídia
+  const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (campaignToEdit) {
@@ -80,6 +86,30 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({
     const generatedUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(whatsAppText)}`;
     setFormData((prev) => ({ ...prev, target_url: generatedUrl }));
     setShowWhatsAppHelper(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      setError('O arquivo de imagem deve ter no máximo 8MB.');
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+    setUploadSuccess(null);
+
+    try {
+      const res = await uploadAdImage(file);
+      setFormData((prev) => ({ ...prev, image_url: res.url }));
+      setUploadSuccess(`Imagem "${file.name}" enviada e salva com sucesso no servidor!`);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao enviar imagem do anúncio.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -344,24 +374,106 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({
             </div>
           </div>
 
-          {/* Mídia e Imagem com Preview */}
+          {/* Mídia e Imagem com Upload e Preview */}
           <div>
-            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
-              URL da Imagem de Alta Definição *
-            </label>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <input
-                type="url"
-                className="input-control"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://..."
-                required
-              />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                Criativo do Anúncio (Imagem de Alta Resolução) *
+              </label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => setImageInputMode('upload')}
+                  className="btn btn-sm"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    background: imageInputMode === 'upload' ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                    color: imageInputMode === 'upload' ? '#fff' : 'var(--text-muted)',
+                  }}
+                >
+                  <UploadCloud size={13} style={{ marginRight: 4 }} />
+                  Enviar Arquivo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageInputMode('url')}
+                  className="btn btn-sm"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    background: imageInputMode === 'url' ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                    color: imageInputMode === 'url' ? '#fff' : 'var(--text-muted)',
+                  }}
+                >
+                  <LinkIcon size={13} style={{ marginRight: 4 }} />
+                  Colar URL
+                </button>
+              </div>
             </div>
 
+            {imageInputMode === 'upload' ? (
+              <div>
+                <label
+                  style={{
+                    border: '2px dashed var(--border-subtle)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '20px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: isUploading ? 'not-allowed' : 'pointer',
+                    background: isUploading ? 'rgba(59, 130, 246, 0.05)' : 'rgba(255, 255, 255, 0.02)',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                    onChange={handleFileUpload}
+                    disabled={isUploading}
+                    style={{ display: 'none' }}
+                  />
+                  {isUploading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--primary)' }}>
+                      <Loader2 size={24} className="animate-spin" />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Enviando e salvando imagem no servidor...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <UploadCloud size={28} style={{ color: 'var(--primary)', marginBottom: 8 }} />
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', textAlign: 'center' }}>
+                        Clique para escolher o arquivo ou arraste a imagem do anúncio aqui
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                        Formatos suportados: PNG, JPG, WebP • Máximo: 8MB
+                      </div>
+                    </>
+                  )}
+                </label>
+                {uploadSuccess && (
+                  <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Check size={14} />
+                    {uploadSuccess}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 10 }}>
+                <input
+                  type="url"
+                  className="input-control"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  placeholder="https://exemplo.com/banner.jpg"
+                  required
+                />
+              </div>
+            )}
+
             {formData.image_url && (
-              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.03)', padding: 10, borderRadius: 'var(--radius-sm)' }}>
                 <div
                   style={{
                     width: 140,
@@ -370,6 +482,7 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({
                     overflow: 'hidden',
                     border: '1px solid var(--border-subtle)',
                     background: '#1e293b',
+                    flexShrink: 0,
                   }}
                 >
                   <img
@@ -382,8 +495,11 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({
                     }}
                   />
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  ✓ Pré-visualização da mídia ({formData.position === 'home_card' ? '16:9' : formData.position === 'interstitial' ? '9:16' : '3:1'})
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', wordBreak: 'break-all' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: 2 }}>
+                    ✓ Imagem vinculada ({formData.position === 'home_card' ? '16:9' : formData.position === 'interstitial' ? '9:16' : '3:1'})
+                  </div>
+                  <div style={{ opacity: 0.8, fontSize: '0.7rem' }}>{formData.image_url}</div>
                 </div>
               </div>
             )}

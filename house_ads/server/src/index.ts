@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
 import { config } from './config.js';
 import { checkDbHealth } from './db.js';
 import { runMigrations } from './migrate.js';
@@ -12,6 +14,12 @@ import { adminRouter } from './routes/admin.js';
 import { packsRouter } from './routes/packs.js';
 
 const app = express();
+
+// Garante existência da pasta de uploads de anúncios
+const uploadsDir = path.join(process.cwd(), 'uploads', 'ads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Atrás do proxy do Easypanel: usa o IP real do cliente (rate limit).
 app.set('trust proxy', 1);
@@ -27,7 +35,16 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   }),
 );
-app.use(express.json({ limit: '256kb' }));
+app.use(express.json({ limit: '10mb' }));
+
+// Servir arquivos estáticos de uploads com cache de 7 dias
+app.use(
+  '/uploads',
+  express.static(path.join(process.cwd(), 'uploads'), {
+    maxAge: '7d',
+    immutable: true,
+  }),
+);
 
 // Health Check
 app.get('/health', async (_req: Request, res: Response) => {

@@ -245,3 +245,31 @@ export async function sendPushNotification(payload: import('../types').PushNotif
     body: JSON.stringify(payload),
   });
 }
+
+/** Faz upload de arquivo de imagem do anúncio para o House Ads server */
+export async function uploadAdImage(file: File): Promise<{ url: string; filename: string; sizeBytes: number }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64Data = reader.result as string;
+        const res = await requestApi<{ success: boolean; url: string; filename: string; sizeBytes: number }>(
+          '/api/v1/admin/ads/upload',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              data: base64Data,
+              filename: file.name,
+            }),
+          }
+        );
+        resolve(res);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error('Erro ao ler o arquivo selecionado.'));
+    reader.readAsDataURL(file);
+  });
+}
+

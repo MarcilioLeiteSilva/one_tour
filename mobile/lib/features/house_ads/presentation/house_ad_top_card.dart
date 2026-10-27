@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../domain/house_ad_model.dart';
 import '../services/house_ads_service.dart';
+import 'house_ad_image.dart';
 
 class HouseAdTopCard extends ConsumerStatefulWidget {
   final HouseAdModel ad;
@@ -60,20 +61,12 @@ class _HouseAdTopCardState extends ConsumerState<HouseAdTopCard> {
         ),
         child: Row(
           children: [
-            ClipRRect(
+            HouseAdImage(
+              imageUrl: widget.ad.imageUrl,
+              width: 72,
+              height: 72,
+              fit: BoxFit.cover,
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                widget.ad.imageUrl,
-                width: 72,
-                height: 72,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 72,
-                  height: 72,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.star, color: Colors.amber),
-                ),
-              ),
             ),
             const SizedBox(width: 12),
             Expanded(

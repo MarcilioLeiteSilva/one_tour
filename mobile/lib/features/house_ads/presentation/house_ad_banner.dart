@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../domain/house_ad_model.dart';
 import '../services/house_ads_service.dart';
+import 'house_ad_image.dart';
 
 class HouseAdBanner extends ConsumerStatefulWidget {
   final HouseAdModel ad;
@@ -60,22 +61,15 @@ class _HouseAdBannerState extends ConsumerState<HouseAdBanner> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagem de Capa com Tag Patrocinada
+          // Imagem de Capa com Tag Patrocinada (com cache local resiliente)
           Stack(
             children: [
-              ClipRRect(
+              HouseAdImage(
+                imageUrl: widget.ad.imageUrl,
+                height: 120,
+                width: double.infinity,
+                fit: BoxFit.cover,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(17)),
-                child: Image.network(
-                  widget.ad.imageUrl,
-                  height: 120,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 120,
-                    color: Colors.grey.shade300,
-                    child: const Center(child: Icon(Icons.campaign, size: 36, color: Colors.grey)),
-                  ),
-                ),
               ),
               Positioned(
                 top: 10,

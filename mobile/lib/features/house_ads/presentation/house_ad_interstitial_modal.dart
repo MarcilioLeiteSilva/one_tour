@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../domain/house_ad_model.dart';
 import '../services/house_ads_service.dart';
+import 'house_ad_image.dart';
 
 class HouseAdInterstitialModal extends ConsumerStatefulWidget {
   final HouseAdModel ad;
@@ -56,19 +57,12 @@ class _HouseAdInterstitialModalState
           // Header Image com botão de fechar
           Stack(
             children: [
-              ClipRRect(
+              HouseAdImage(
+                imageUrl: widget.ad.imageUrl,
+                height: 160,
+                width: double.infinity,
+                fit: BoxFit.cover,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                child: Image.network(
-                  widget.ad.imageUrl,
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 160,
-                    color: Colors.grey.shade300,
-                    child: const Center(child: Icon(Icons.shield_outlined, size: 48, color: Colors.grey)),
-                  ),
-                ),
               ),
               Positioned(
                 top: 10,

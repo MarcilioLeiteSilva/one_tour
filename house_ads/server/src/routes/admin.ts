@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import path from 'path';
+import fs from 'fs';
 import { query } from '../db.js';
 import { recalculateRankings } from '../rankings.js';
 import { asyncHandler, isPlaceId, isSlug, isUf, requireAdmin } from '../middleware.js';
@@ -357,3 +359,66 @@ adminRouter.delete(
     res.json({ success: true, deleted: id });
   }),
 );
+
+/** POST /api/v1/admin/ads/upload — upload de imagem de anúncio (base64 data URL) */
+adminRouter.post(
+  '/ads/upload',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { data, filename } = req.body || {};
+    if (!data || typeof data !== 'string') {
+      res.status(400).json({ error: 'data (base64 string ou data URL) é obrigatório' });
+      return;
+    }
+
+    let ext = 'webp';
+    let base64Content = data;
+
+    const match = data.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+    if (match) {
+      const mime = match[1].toLowerCase();
+      if (mime === 'jpeg' || mime === 'jpg') ext = 'jpg';
+      else if (mime === 'png') ext = 'png';
+      else if (mime === 'webp') ext = 'webp';
+      else if (mime === 'gif') ext = 'gif';
+      base64Content = match[2];
+    } else if (filename && typeof filename === 'string' && filename.includes('.')) {
+      const userExt = filename.split('.').pop()?.toLowerCase();
+      if (userExt && ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(userExt)) {
+        ext = userExt === 'jpeg' ? 'jpg' : userExt;
+      }
+    }
+
+    const buffer = Buffer.from(base64Content, 'base64');
+    if (buffer.length === 0) {
+      res.status(400).json({ error: 'Conteúdo de imagem inválido ou vazio.' });
+      return;
+    }
+    if (buffer.length > 8 * 1024 * 1024) {
+      res.status(400).json({ error: 'Imagem excede o limite máximo de 8MB.' });
+      return;
+    }
+
+    const targetDir = path.join(process.cwd(), 'uploads', 'ads');
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const safeFilename = `ad_${Date.now()}_${randomSuffix}.${ext}`;
+    const filePath = path.join(targetDir, safeFilename);
+
+    await fs.promises.writeFile(filePath, buffer);
+
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host');
+    const publicUrl = `${protocol}://${host}/uploads/ads/${safeFilename}`;
+
+    res.json({
+      success: true,
+      url: publicUrl,
+      filename: safeFilename,
+      sizeBytes: buffer.length,
+    });
+  }),
+);
+

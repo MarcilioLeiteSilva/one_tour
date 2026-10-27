@@ -47,6 +47,7 @@ dependencies:
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
   google_mobile_ads: ^5.2.0
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
