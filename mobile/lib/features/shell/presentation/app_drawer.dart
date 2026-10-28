@@ -440,22 +440,21 @@ class AppDrawer extends ConsumerWidget {
                       icon: const Icon(Icons.download_rounded, size: 16),
                       label: const Text('Baixar'),
                       onPressed: () async {
+                        final messenger = ScaffoldMessenger.maybeOf(context);
                         Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger?.showSnackBar(
                           SnackBar(
                             content: Text('Baixando pacote de ${c['name']}...'),
                             duration: const Duration(seconds: 2),
                           ),
                         );
                         await CityPackDownloadService.instance.downloadCityPack(c['slug']!);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.green.shade700,
-                              content: Text('✅ Guia e mapa de ${c['name']} prontos para uso offline!'),
-                            ),
-                          );
-                        }
+                        messenger?.showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.green.shade700,
+                            content: Text('✅ Guia e mapa de ${c['name']} prontos para uso offline!'),
+                          ),
+                        );
                       },
                     ),
                   ),
