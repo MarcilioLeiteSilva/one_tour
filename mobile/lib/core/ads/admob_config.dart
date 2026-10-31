@@ -45,6 +45,14 @@ class AdMobConfig {
       nativeId: 'ca-app-pub-5133242303791049/6065468944',
       rewardedId: 'ca-app-pub-5133242303791049/6792439283',
     ),
+    // 2. Alagoas (Onda 1)
+    'al': AdMobUnitIds(
+      appId: 'ca-app-pub-5133242303791049~3525828291',
+      bannerId: 'ca-app-pub-5133242303791049/5845316981',
+      interstitialId: 'ca-app-pub-5133242303791049/7951112282',
+      nativeId: 'ca-app-pub-5133242303791049/2535134076',
+      rewardedId: 'ca-app-pub-5133242303791049/5161297412',
+    ),
     // Outros estados da Onda 1 serão adicionados aqui conforme forem criados no console
   };
 

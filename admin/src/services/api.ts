@@ -273,3 +273,9 @@ export async function uploadAdImage(file: File): Promise<{ url: string; filename
   });
 }
 
+export async function updatePbRecord(collection: string, id: string, data: Record<string, any>): Promise<any> {
+  return requestPb('/api/collections/' + collection + '/records/' + encodeURIComponent(id), {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}

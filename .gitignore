@@ -60,11 +60,19 @@ yarn-debug.log*
 yarn-error.log*
 
 # Builds, APKs, Screenshots de Lojas e Chaves
+APKS/
 APK-*/
 *.apk
 *.aab
 *.jks
 *.keystore
+key.properties
+**/key.properties
+**/keys/
+*keystore_info*
+mapping.txt
+**/mapping.txt
+*.zip
 
 # Relatórios e Documentação Interna de Negócio
 relatorios/

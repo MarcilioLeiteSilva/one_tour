@@ -37,11 +37,12 @@ class ExploreRepository {
             final slug = (m['slug'] ?? m['id'] ?? '').toString();
             final isDl = downloadedSet.contains(slug);
 
+            final dynamicImg = (m['image_url'] ?? m['imagem'] ?? '').toString().trim();
             return CityModel(
               id: slug,
               name: m['nome'] ?? 'Cidade',
               tag: m['tag'] ?? 'Destino Turístico',
-              imageUrl: _getCityImageUrl(slug),
+              imageUrl: dynamicImg.isNotEmpty ? dynamicImg : _getCityImageUrl(slug),
               description: m['descricao_pt'] ?? '',
               attractionsCount: slug == 'recife'
                   ? 38
@@ -174,13 +175,14 @@ class ExploreRepository {
           final slug = (m['slug'] ?? m['id'] ?? '').toString();
           final cSlug = (m['cidade_slug'] ?? '').toString();
 
+          final dynamicAttImg = (m['image_url'] ?? m['imagem'] ?? '').toString().trim();
           mergedMap[slug] = AttractionModel(
             id: slug,
             name: m['nome'] ?? 'Atração',
             cityId: cSlug,
             cityName: MockPeData.cityNameFromSlug(cSlug),
             category: m['categoria'] ?? 'Turismo',
-            imageUrl: _getAttractionImageUrl(slug),
+            imageUrl: dynamicAttImg.isNotEmpty ? dynamicAttImg : _getAttractionImageUrl(slug),
             rating: (m['rating_avg'] as num?)?.toDouble() ?? 4.8,
             reviewsCount: (m['rating_count'] as num?)?.toInt() ?? 1200,
             likesCount: (m['likes_count'] as num?)?.toInt() ?? 3400,
@@ -226,58 +228,79 @@ class ExploreRepository {
   static String _getCityImageUrl(String slug) {
     switch (slug.toLowerCase()) {
       case 'porto_de_galinhas':
-        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+        // Jangadas típicas nas piscinas naturais de Porto de Galinhas
+        return 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&w=1000&q=80';
       case 'olinda':
-        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80';
+        // Alto da Sé com casarios coloniais e vista panorâmica de Olinda
+        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1000&q=80';
       case 'carneiros':
-        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80';
+        // Capela de São Benedito e coqueirais da Praia dos Carneiros
+        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1000&q=80';
       case 'noronha':
-        return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80';
+        // Baía do Sancho em Fernando de Noronha (falésias e águas esmeralda)
+        return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=1000&q=80';
       case 'maceio':
-        return 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=800&q=80';
+        // Orla cinematográfica e jangadas da Praia de Pajuçara em Maceió
+        return 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1000&q=80';
       case 'maragogi':
-        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80';
+        // Piscinas naturais Galés de Maragogi em alto-mar (águas turquesas)
+        return 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=1000&q=80';
       case 'milagres':
-        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+        // Rota Ecológica dos Milagres e mar verde-esmeralda da Praia do Toque
+        return 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1000&q=80';
       case 'salvador':
-        return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=80';
       case 'fortaleza':
-        return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80';
       case 'natal':
-        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80';
       case 'joao_pessoa':
-        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=1000&q=80';
       case 'recife':
       default:
-        return 'https://images.unsplash.com/photo-1577039508937-99c3b639ba77?auto=format&fit=crop&w=800&q=80';
+        // Praça do Marco Zero e Rio Capibaribe em Recife Antigo
+        return 'https://images.unsplash.com/photo-1577039508937-99c3b639ba77?auto=format&fit=crop&w=1000&q=80';
     }
   }
 
   static String _getAttractionImageUrl(String slug) {
     switch (slug.toLowerCase()) {
       case 'piscinas_porto':
-        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&w=1000&q=80';
+      case 'muro_alto':
+        return 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1000&q=80';
       case 'alto_da_se':
-        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1000&q=80';
       case 'igrejinha_carneiros':
-        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80';
+      case 'capela_sao_benedito':
+        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1000&q=80';
       case 'baia_do_sancho':
-        return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=1000&q=80';
+      case 'morro_dois_irmaos':
+        return 'https://images.unsplash.com/photo-1589556264800-08ae9e129a8c?auto=format&fit=crop&w=1000&q=80';
       case 'piscinas_pajucara':
       case 'praia_pajucara':
-        return 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1000&q=80';
       case 'farol_ponta_verde':
-        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=1000&q=80';
       case 'praia_do_frances':
       case 'praia_frances':
-        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80';
       case 'gales_maragogi':
-        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=1000&q=80';
+      case 'antunes_maragogi':
+        return 'https://images.unsplash.com/photo-1515238152791-8216bfdf89a7?auto=format&fit=crop&w=1000&q=80';
       case 'praia_do_toque':
-        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1000&q=80';
+      case 'praia_ipioca':
+        return 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1000&q=80';
+      case 'massagueira_gastronomia':
+        return 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80';
+      case 'cais_do_sertao':
+        return 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1000&q=80';
       case 'marco_zero':
       default:
-        return 'https://images.unsplash.com/photo-1680788842764-b5c9bc78ce59?auto=format&fit=crop&w=800&q=80';
+        return 'https://images.unsplash.com/photo-1680788842764-b5c9bc78ce59?auto=format&fit=crop&w=1000&q=80';
     }
   }
 }

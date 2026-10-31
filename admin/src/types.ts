@@ -112,3 +112,17 @@ export interface SentNotificationRecord {
   action_value: string;
   sent_at: string;
 }
+
+export interface AppImageItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  uf: string;
+  citySlug?: string;
+  category: 'cidade' | 'praia' | 'cultura' | 'gastronomia' | 'anuncio' | 'push';
+  imageUrl: string;
+  sourceType: 'cidade' | 'atracao' | 'campanha' | 'push' | 'curated';
+  sourceId?: string;
+  curatedSuggestions?: string[];
+  updatedAt?: string;
+}

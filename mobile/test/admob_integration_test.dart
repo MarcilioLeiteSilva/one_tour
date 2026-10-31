@@ -14,6 +14,16 @@ void main() {
       expect(units.rewardedId, 'ca-app-pub-5133242303791049/6792439283');
     });
 
+    test('AdMobConfig returns authentic production IDs for Alagoas when in production mode', () {
+      final units = AdMobConfig.getUnitsForUf('al', forceProduction: true);
+
+      expect(units.appId, 'ca-app-pub-5133242303791049~3525828291');
+      expect(units.bannerId, 'ca-app-pub-5133242303791049/5845316981');
+      expect(units.interstitialId, 'ca-app-pub-5133242303791049/7951112282');
+      expect(units.nativeId, 'ca-app-pub-5133242303791049/2535134076');
+      expect(units.rewardedId, 'ca-app-pub-5133242303791049/5161297412');
+    });
+
     test('AdMobConfig returns safe Google Test IDs by default in test/debug to protect account from bans', () {
       final units = AdMobConfig.getUnitsForUf('pe');
 

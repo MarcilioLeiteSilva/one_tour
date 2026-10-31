@@ -1,9 +1,18 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
+}
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -28,6 +37,16 @@ android {
         versionName = flutter.versionName
         resValue("string", "app_name", "One Tour")
         manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+    }
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            val storeFilePath = keystoreProperties.getProperty("storeFile")
+            storeFile = if (storeFilePath != null) rootProject.file(storeFilePath) else null
+            storePassword = keystoreProperties.getProperty("storePassword")
+        }
     }
 
     flavorDimensions += "state"
@@ -62,7 +81,8 @@ android {
             "rr" to "Tour Roraima"
         )
         val admobAppIds = mapOf(
-            "pe" to "ca-app-pub-5133242303791049~4445477549"
+            "pe" to "ca-app-pub-5133242303791049~4445477549",
+            "al" to "ca-app-pub-5133242303791049~3525828291"
         )
         val defaultAdmobAppId = "ca-app-pub-3940256099942544~3347511713" // Google sample test App ID
 
@@ -78,7 +98,11 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (keystorePropertiesFile.exists() && keystoreProperties.getProperty("storeFile") != null) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
