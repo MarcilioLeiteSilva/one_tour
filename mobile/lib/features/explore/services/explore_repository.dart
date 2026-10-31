@@ -228,79 +228,109 @@ class ExploreRepository {
   static String _getCityImageUrl(String slug) {
     switch (slug.toLowerCase()) {
       case 'porto_de_galinhas':
-        // Jangadas típicas nas piscinas naturais de Porto de Galinhas
-        return 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Piscina natural na Praia de Porto de Galinhas, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Piscina_natural_na_Praia_de_Porto_de_Galinhas%2C_Pernambuco%2C_Brasil%282%29.jpg';
       case 'olinda':
-        // Alto da Sé com casarios coloniais e vista panorâmica de Olinda
-        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Centro Histórico de Olinda, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Centro_Hist%C3%B3rico_de_Olinda_-_Pernambuco.jpg/1280px-Centro_Hist%C3%B3rico_de_Olinda_-_Pernambuco.jpg';
       case 'carneiros':
-        // Capela de São Benedito e coqueirais da Praia dos Carneiros
-        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praia dos Carneiros, Tamandaré, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Praia_dos_Carneiros%2C_Tamandar%C3%A9%2C_PE.jpg/1280px-Praia_dos_Carneiros%2C_Tamandar%C3%A9%2C_PE.jpg';
       case 'noronha':
-        // Baía do Sancho em Fernando de Noronha (falésias e águas esmeralda)
-        return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Baía do Sancho em Fernando de Noronha
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Fernando_De_Noronha_Strand_Baia_Do_Sancho_%28125363049%29.jpeg/1280px-Fernando_De_Noronha_Strand_Baia_Do_Sancho_%28125363049%29.jpeg';
       case 'maceio':
-        // Orla cinematográfica e jangadas da Praia de Pajuçara em Maceió
-        return 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Orla de Maceió (Ponta Verde / Pajuçara)
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Orla_de_Macei%C3%B3_2023.jpg/1280px-Orla_de_Macei%C3%B3_2023.jpg';
       case 'maragogi':
-        // Piscinas naturais Galés de Maragogi em alto-mar (águas turquesas)
-        return 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praia de Maragogi, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Maragogi_beach_tourist.jpg/1280px-Maragogi_beach_tourist.jpg';
       case 'milagres':
-        // Rota Ecológica dos Milagres e mar verde-esmeralda da Praia do Toque
-        return 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: São Miguel dos Milagres, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Beach_Sao_Miguel_Dos_Milagres_Alagoas_%28140207749%29.jpeg/1280px-Beach_Sao_Miguel_Dos_Milagres_Alagoas_%28140207749%29.jpeg';
       case 'salvador':
-        return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=80';
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Pelourinho_-_Salvador_-_Bahia_-_Brasil.jpg/1280px-Pelourinho_-_Salvador_-_Bahia_-_Brasil.jpg';
       case 'fortaleza':
-        return 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80';
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Praia_de_Iracema_-_Fortaleza%2C_Cear%C3%A1%2C_Brasil.jpg/1280px-Praia_de_Iracema_-_Fortaleza%2C_Cear%C3%A1%2C_Brasil.jpg';
       case 'natal':
-        return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80';
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Morro_do_Careca_Ponta_Negra_Natal_RN_Brazil.jpg/1280px-Morro_do_Careca_Ponta_Negra_Natal_RN_Brazil.jpg';
       case 'joao_pessoa':
-        return 'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=1000&q=80';
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Praia_de_Tambau_-_Joao_Pessoa_-_PB.jpg/1280px-Praia_de_Tambau_-_Joao_Pessoa_-_PB.jpg';
       case 'recife':
       default:
-        // Praça do Marco Zero e Rio Capibaribe em Recife Antigo
-        return 'https://images.unsplash.com/photo-1577039508937-99c3b639ba77?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praça do Marco Zero e Recife Antigo
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Pra%C3%A7a_do_Marco_Zero%2C_Recife%2C_Pernambuco%2C_Brasil.jpg/1280px-Pra%C3%A7a_do_Marco_Zero%2C_Recife%2C_Pernambuco%2C_Brasil.jpg';
     }
   }
 
   static String _getAttractionImageUrl(String slug) {
     switch (slug.toLowerCase()) {
       case 'piscinas_porto':
-        return 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Piscinas naturais de Porto de Galinhas
+        return 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Piscina_natural_na_Praia_de_Porto_de_Galinhas%2C_Pernambuco%2C_Brasil%282%29.jpg';
       case 'muro_alto':
-        return 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praia de Muro Alto, Ipojuca, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/BRUNO_LIMA_PRAIA_DE_MURO_ALTO_IPOJUCA_PE_%2840908731001%29.jpg/1280px-BRUNO_LIMA_PRAIA_DE_MURO_ALTO_IPOJUCA_PE_%2840908731001%29.jpg';
+      case 'pontal_maracaipe':
+        // Wikimedia Commons: Pontal de Maracaípe, Ipojuca, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/BRUNO_LIMA_PONTAL_DE_MARACAIPE_IPOJUCA_PE_%2826036000327%29.jpg/1280px-BRUNO_LIMA_PONTAL_DE_MARACAIPE_IPOJUCA_PE_%2826036000327%29.jpg';
       case 'alto_da_se':
-        return 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Mirante e Alto da Sé, Olinda, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Mirante_da_Caixa_D%27%C3%81gua_do_Alto_da_S%C3%A9_-_Olinda%2C_Pernambuco%2C_Brasil.jpg/1280px-Mirante_da_Caixa_D%27%C3%81gua_do_Alto_da_S%C3%A9_-_Olinda%2C_Pernambuco%2C_Brasil.jpg';
       case 'igrejinha_carneiros':
       case 'capela_sao_benedito':
-        return 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Capela de São Benedito, Carneiros, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Capela_S%C3%A3o_Benedito_-_Praia_de_Carneiros_-_Pernambuco.jpg/1280px-Capela_S%C3%A3o_Benedito_-_Praia_de_Carneiros_-_Pernambuco.jpg';
       case 'baia_do_sancho':
-        return 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Baía do Sancho, Fernando de Noronha
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Fernando_De_Noronha_Strand_Baia_Do_Sancho_%28125363049%29.jpeg/1280px-Fernando_De_Noronha_Strand_Baia_Do_Sancho_%28125363049%29.jpeg';
       case 'morro_dois_irmaos':
-        return 'https://images.unsplash.com/photo-1589556264800-08ae9e129a8c?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Morro Dois Irmãos em Fernando de Noronha
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Morro_Dois_Irm%C3%A3os_em_Fernando_de_Noronha%2C_Pernambuco.jpg/1280px-Morro_Dois_Irm%C3%A3os_em_Fernando_de_Noronha%2C_Pernambuco.jpg';
       case 'piscinas_pajucara':
+        // Wikimedia Commons: Jangadas nas piscinas de Pajuçara, Maceió
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Paju%C3%A7ara_em_Macei%C3%B3._%285700883183%29.jpg/1280px-Paju%C3%A7ara_em_Macei%C3%B3._%285700883183%29.jpg';
       case 'praia_pajucara':
-        return 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praia de Pajuçara, Maceió, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Praia_Paju%C3%A7ara_Macei%C3%B3_04_2015_3249.JPG/1280px-Praia_Paju%C3%A7ara_Macei%C3%B3_04_2015_3249.JPG';
       case 'farol_ponta_verde':
-        return 'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Farol da Ponta Verde, Maceió, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Farol_da_Ponta_Verde_-_Macei%C3%B3%2C_AL_%2852113641992%29.jpg/1280px-Farol_da_Ponta_Verde_-_Macei%C3%B3%2C_AL_%2852113641992%29.jpg';
       case 'praia_do_frances':
       case 'praia_frances':
-        return 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praia do Francês, Marechal Deodoro, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Praia_do_Franc%C3%AAs%2C_Marechal_Deodoro_01.jpg/1280px-Praia_do_Franc%C3%AAs%2C_Marechal_Deodoro_01.jpg';
       case 'gales_maragogi':
-        return 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Piscinas naturais Galés de Maragogi, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Sargentinho_-_Piscinas_naturais_de_Maragogi_-_Alagoas.jpg/1280px-Sargentinho_-_Piscinas_naturais_de_Maragogi_-_Alagoas.jpg';
       case 'antunes_maragogi':
-        return 'https://images.unsplash.com/photo-1515238152791-8216bfdf89a7?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praia de Antunes, Maragogi, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Marco_Ankosqui_Praia_de_Antunes_Maragogi-AL_%2840850130861%29.jpg/1280px-Marco_Ankosqui_Praia_de_Antunes_Maragogi-AL_%2840850130861%29.jpg';
       case 'praia_do_toque':
-        return 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1000&q=80';
-      case 'praia_ipioca':
-        return 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praia do Toque, São Miguel dos Milagres, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Marco_Ankosqui_Praia_do_Toque_Sao_Miguel_Milagres-AL_%2839956457515%29.jpg/1280px-Marco_Ankosqui_Praia_do_Toque_Sao_Miguel_Milagres-AL_%2839956457515%29.jpg';
+      case 'praia_gunga':
+        // Wikimedia Commons: Praia do Gunga, Roteiro, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Praia_do_Gunga_%281%29_-_Alagoas.jpg/1280px-Praia_do_Gunga_%281%29_-_Alagoas.jpg';
       case 'massagueira_gastronomia':
-        return 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Lagoa Manguaba e Polo Gastronômico da Massagueira, AL
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/P%C3%B4r_do_sol_da_Lagoa_Manguaba%2C_Marechal_Deodoro_-_AL.jpg/1280px-P%C3%B4r_do_sol_da_Lagoa_Manguaba%2C_Marechal_Deodoro_-_AL.jpg';
       case 'cais_do_sertao':
-        return 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Museu Cais do Sertão, Recife, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/BRUNO_LIMA_CAIS_DO_SERTAO_RECIFE_PE_%2839114020220%29.jpg/1280px-BRUNO_LIMA_CAIS_DO_SERTAO_RECIFE_PE_%2839114020220%29.jpg';
+      case 'instituto_brennand':
+        // Wikimedia Commons: Instituto Ricardo Brennand, Recife, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Instituto_Ricardo_Brennand_-_Recife_%28crop%29.png';
+      case 'oficina_brennand':
+        // Wikimedia Commons: Oficina Francisco Brennand, Recife, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Oficina_de_Cer%C3%A2mica_Francisco_Brennand_%28foto3%29-_Recife%2C_Pernambuco%2C_Brasil.jpg/1280px-Oficina_de_Cer%C3%A2mica_Francisco_Brennand_%28foto3%29-_Recife%2C_Pernambuco%2C_Brasil.jpg';
+      case 'boa_viagem':
+        // Wikimedia Commons: Praia de Boa Viagem, Recife, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Boa_Viagem%2C_Recife_%2820150717-DSC05419%29.jpg/1280px-Boa_Viagem%2C_Recife_%2820150717-DSC05419%29.jpg';
       case 'marco_zero':
       default:
-        return 'https://images.unsplash.com/photo-1680788842764-b5c9bc78ce59?auto=format&fit=crop&w=1000&q=80';
+        // Wikimedia Commons: Praça do Marco Zero, Recife, PE
+        return 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Pra%C3%A7a_do_Marco_Zero%2C_Recife%2C_Pernambuco%2C_Brasil.jpg/1280px-Pra%C3%A7a_do_Marco_Zero%2C_Recife%2C_Pernambuco%2C_Brasil.jpg';
     }
   }
 }
