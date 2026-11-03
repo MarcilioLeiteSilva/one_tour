@@ -37,6 +37,14 @@ class AdMobConfig {
 
   /// Catálogo de IDs de Produção por Estado
   static const Map<String, AdMobUnitIds> _productionUnits = {
+    // One Tour: Guia de Viagem (Base Nacional / com.onetour.pe)
+    'br': AdMobUnitIds(
+      appId: 'ca-app-pub-5133242303791049~4445477549',
+      bannerId: 'ca-app-pub-5133242303791049/1923255989',
+      interstitialId: 'ca-app-pub-5133242303791049/4252151837',
+      nativeId: 'ca-app-pub-5133242303791049/6065468944',
+      rewardedId: 'ca-app-pub-5133242303791049/6792439283',
+    ),
     // 1. Pernambuco (Piloto Oficial)
     'pe': AdMobUnitIds(
       appId: 'ca-app-pub-5133242303791049~4445477549',

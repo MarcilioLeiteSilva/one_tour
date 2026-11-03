@@ -43,14 +43,14 @@ class FlavorConfig {
 
   static FlavorConfig of(AppFlavor flavor) {
     switch (flavor) {
-      // 1. Pernambuco
+      // 1. One Tour: Guia de Viagem (Base Nacional / com.onetour.pe)
       case AppFlavor.pe:
         return const FlavorConfig(
           flavor: AppFlavor.pe,
-          uf: 'PE',
-          stateName: 'Pernambuco',
-          appName: 'Tour Pernambuco',
-          slogan: 'Cultura, frevo, mar e encantos do litoral ao sertão',
+          uf: 'BR',
+          stateName: 'Brasil',
+          appName: 'One Tour: Guia de Viagem',
+          slogan: 'Descubra os melhores destinos, praias e roteiros do Brasil',
           capital: 'Recife',
           primaryColor: Color(0xFF0F4C81),
           secondaryColor: Color(0xFFEAA221),

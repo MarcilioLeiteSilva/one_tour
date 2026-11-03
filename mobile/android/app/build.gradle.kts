@@ -30,13 +30,13 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.onetour.one_tour_app"
+        applicationId = "com.onetour.pe"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        resValue("string", "app_name", "One Tour")
-        manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+        resValue("string", "app_name", "One Tour: Guia de Viagem")
+        manifestPlaceholders["admobAppId"] = "ca-app-pub-5133242303791049~4445477549"
     }
 
     signingConfigs {
@@ -52,7 +52,7 @@ android {
     flavorDimensions += "state"
     productFlavors {
         val states = mapOf(
-            "pe" to "Tour Pernambuco",
+            "pe" to "One Tour: Guia de Viagem",
             "sp" to "Tour São Paulo",
             "rj" to "Tour Rio de Janeiro",
             "ba" to "Tour Bahia",

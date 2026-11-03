@@ -33,7 +33,7 @@ import { CheckCircle2, AlertCircle, Menu, RefreshCw, Radio } from 'lucide-react'
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
-  const [selectedUf, setSelectedUf] = useState<string>('PE');
+  const [selectedUf, setSelectedUf] = useState<string>('TODOS');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!getStoredToken());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
