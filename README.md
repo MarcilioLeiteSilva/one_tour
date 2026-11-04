@@ -53,7 +53,7 @@ One_tour/
 ## 📌 Status Atual de Implementação
 
 ### 1. 🎯 Transição para App Único Nacional
-* **App Unificado:** Em vez de manter 27 aplicativos regionais, o projeto foi unificado no aplicativo **One Tour: Guia de Viagem** (`com.onetour.pe`), eliminando riscos de políticas de conteúdo repetitivo da Play Store e reduzindo drasticamente custos de manutenção.
+* **App Unificado:** Em vez de manter 27 aplicativos regionais, o projeto foi unificado no aplicativo **One Tour: Guia de Viagem** (`com.onetour.pe`), eliminando riscos de políticas de conteúdo repetitivo da Play Store e reduzindo custos de manutenção.
 * **Download Modular de Cidades:** O usuário baixa apenas os pacotes das cidades que deseja explorar offline (ex: Recife, Maceió, Salvador, Rio de Janeiro, São Paulo, Florianópolis, Foz do Iguaçu, Gramado).
 * **AI Trip Planner Local:** Algoritmo combinatório preservado, gerando roteiros dia a dia sem custos de servidor e 100% offline.
 
